@@ -5,11 +5,12 @@ import { Patient, SOAPNote, MedicalScan } from '../types/database';
 import { ComprehensiveSOAPNoteEditor } from './ComprehensiveSOAPNoteEditor';
 import { ScanUploader } from './ScanUploader';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
+import { BiometricsSection } from './BiometricsSection';
 import { BasicPatientEditor } from './BasicPatientEditor';
 import PatientService from '../services/patient';
-import { 
-  User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText, 
-  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, Edit3 
+import {
+  User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText,
+  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, TrendingUp, Edit3
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -17,7 +18,7 @@ interface PatientViewProps {
   doctorId: string;
 }
 
-type DrawerSection = 'overview' | 'notes' | 'scans';
+type DrawerSection = 'overview' | 'notes' | 'scans' | 'biometrics';
 
 export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
   const { patientId } = useParams<{ patientId: string }>();
@@ -189,6 +190,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
     { id: 'overview', label: 'Overview', icon: User, count: null },
     { id: 'notes', label: 'SOAP Notes', icon: FileText, count: soapNotes.length },
     { id: 'scans', label: 'Medical Scans', icon: Image, count: medicalScans.length },
+    { id: 'biometrics', label: 'Biometrics', icon: TrendingUp, count: null },
   ];
 
   return (
@@ -257,6 +259,14 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
               >
                 <Brain className="h-4 w-4" />
                 <span className="hidden sm:inline">AI</span>
+              </button>
+              <button
+                onClick={() => setShowBasicPatientEditor(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                title="Edit Patient Info"
+              >
+                <Edit3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Edit Patient</span>
               </button>
             </div>
           </div>
@@ -627,6 +637,10 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                 </div>
               </div>
             )}
+
+            {activeSection === 'biometrics' && (
+              <BiometricsSection patientId={patient.id} />
+            )}
           </div>
         </div>
       </div>
@@ -694,6 +708,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
           onClose={() => setShowBasicPatientEditor(false)}
           onPatientUpdated={(updatedPatient) => {
             setPatient(updatedPatient);
+            setShowBasicPatientEditor(false);
             // Refresh patient data to show updated info
             loadPatientData(true);
           }}
