@@ -29,6 +29,7 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({
   const [medicalScans, setMedicalScans] = useState<MedicalScan[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'scans'>('overview');
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
@@ -110,10 +111,13 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({
   const generateSummary = async () => {
     if (!patient) return;
     try {
+      setGeneratingSummary(true);
       const summary = await PatientService.generatePatientSummary(patient.id);
       setPatient({ ...patient, ai_summary: summary });
     } catch (error) {
       console.error('Failed to generate summary:', error);
+    } finally {
+      setGeneratingSummary(false);
     }
   };
 
@@ -335,12 +339,33 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({
                     </div>
                     <button
                       onClick={generateSummary}
-                      className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+                      disabled={generatingSummary}
+                      className="flex items-center space-x-2 px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 disabled:opacity-50"
                     >
-                      Generate Summary
+                      {generatingSummary ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="h-3 w-3" />
+                          <span>Generate Summary</span>
+                        </>
+                      )}
                     </button>
                   </div>
-                  {patient.ai_summary ? (
+                  {generatingSummary ? (
+                    <div className="flex items-center justify-center p-8">
+                      <div className="flex flex-col items-center space-y-3">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                        <div className="text-center">
+                          <p className="text-purple-700 font-medium">Generating AI Summary...</p>
+                          <p className="text-purple-600 text-sm mt-1">Analyzing patient data, SOAP notes, and medical scans</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : patient.ai_summary ? (
                     <div className="text-purple-700 prose prose-sm max-w-none">
                       <ReactMarkdown
                         components={{
