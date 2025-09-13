@@ -1,5 +1,7 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Dashboard } from './components/Dashboard';
+import { PatientView } from './components/PatientView';
 import './App.css';
 
 function App() {
@@ -8,7 +10,12 @@ function App() {
 
   return (
     <div className="App">
-      <Dashboard doctorId={doctorId} />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Dashboard doctorId={doctorId} />} />
+          <Route path="/patient/:patientId" element={<PatientView doctorId={doctorId} />} />
+        </Routes>
+      </Router>
     </div>
   );
 }
