@@ -260,14 +260,6 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                 <Brain className="h-4 w-4" />
                 <span className="hidden sm:inline">AI</span>
               </button>
-              <button
-                onClick={() => setShowBasicPatientEditor(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                title="Edit Patient Info"
-              >
-                <Edit3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Edit Patient</span>
-              </button>
             </div>
           </div>
         </div>
