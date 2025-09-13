@@ -5,6 +5,7 @@ import { PatientProfile } from './PatientProfile';
 import { SOAPNoteEditor } from './SOAPNoteEditor';
 import { ScanUploader } from './ScanUploader';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
+import { NewPatientModal } from './NewPatientModal';
 import PatientService from '../services/patient';
 import { 
   Search, 
@@ -31,6 +32,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
   const [showSOAPEditor, setShowSOAPEditor] = useState(false);
   const [showScanUploader, setShowScanUploader] = useState(false);
   const [showDiagnosticAssistant, setShowDiagnosticAssistant] = useState(false);
+  const [showNewPatientModal, setShowNewPatientModal] = useState(false);
   const [currentSOAP, setCurrentSOAP] = useState<SOAPNote | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'recent' | 'critical'>('all');
   const [scanJustUploaded, setScanJustUploaded] = useState(false);
@@ -147,6 +149,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
     loadPatients();
   };
 
+  const handleNewPatientCreated = (patient: Patient) => {
+    setShowNewPatientModal(false);
+    // Refresh the patient list to include the new patient
+    loadPatients();
+    // Optionally, open the new patient's profile
+    setSelectedPatient(patient);
+    setShowPatientProfile(true);
+  };
+
   const StatCard: React.FC<{ title: string; value: number; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
     <div className={`bg-white p-6 rounded-lg shadow-md border-l-4 ${color}`}>
       <div className="flex items-center justify-between">
@@ -241,7 +252,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
               </div>
               
               <button
-                onClick={() => {/* Handle new patient */}}
+                onClick={() => setShowNewPatientModal(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4" />
@@ -389,6 +400,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* New Patient Modal */}
+      {showNewPatientModal && (
+        <NewPatientModal
+          onClose={() => setShowNewPatientModal(false)}
+          onPatientCreated={handleNewPatientCreated}
+        />
       )}
     </div>
   );
