@@ -6,10 +6,11 @@ import { ComprehensiveSOAPNoteEditor } from './ComprehensiveSOAPNoteEditor';
 import { ScanUploader } from './ScanUploader';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
 import { BiometricsSection } from './BiometricsSection';
+import { BasicPatientEditor } from './BasicPatientEditor';
 import PatientService from '../services/patient';
 import {
   User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText,
-  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, TrendingUp
+  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, TrendingUp, Edit3
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -37,6 +38,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
   const [showSOAPEditor, setShowSOAPEditor] = useState(false);
   const [showScanUploader, setShowScanUploader] = useState(false);
   const [showDiagnosticAssistant, setShowDiagnosticAssistant] = useState(false);
+  const [showBasicPatientEditor, setShowBasicPatientEditor] = useState(false);
   const [currentSOAP, setCurrentSOAP] = useState<SOAPNote | null>(null);
   const [scanJustUploaded, setScanJustUploaded] = useState(false);
 
@@ -249,6 +251,14 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
               >
                 <Brain className="h-4 w-4" />
                 <span className="hidden sm:inline">AI</span>
+              </button>
+              <button
+                onClick={() => setShowBasicPatientEditor(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                title="Edit Patient Info"
+              >
+                <Edit3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Edit Patient</span>
               </button>
             </div>
           </div>
@@ -676,6 +686,18 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Basic Patient Editor Modal */}
+      {showBasicPatientEditor && patient && (
+        <BasicPatientEditor
+          patient={patient}
+          onClose={() => setShowBasicPatientEditor(false)}
+          onUpdate={(updatedPatient) => {
+            setPatient(updatedPatient);
+            setShowBasicPatientEditor(false);
+          }}
+        />
       )}
     </div>
   );
