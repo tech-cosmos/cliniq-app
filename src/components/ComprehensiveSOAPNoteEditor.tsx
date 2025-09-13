@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { SOAPNote, Patient } from '../types/database';
 import { VoiceRecorder } from './VoiceRecorder';
+import { PatientEditModal } from './PatientEditModal';
 import SOAPService from '../services/soap';
 import GeminiService from '../services/gemini';
-import { Save, Brain, Mic, FileText, User, Calendar, Plus, X } from 'lucide-react';
+import { Save, Brain, Mic, FileText, User, Calendar, Plus, X, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ComprehensiveSOAPNoteEditorProps {
@@ -12,6 +13,7 @@ interface ComprehensiveSOAPNoteEditorProps {
   onSave: (soapNote: SOAPNote) => void;
   onClose: () => void;
   doctorId: string;
+  onPatientUpdated?: (updatedPatient: Patient) => void;
 }
 
 export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorProps> = ({
@@ -19,8 +21,10 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
   soapNote,
   onSave,
   onClose,
-  doctorId
+  doctorId,
+  onPatientUpdated
 }) => {
+  const [currentPatient, setCurrentPatient] = useState<Patient>(patient);
   const [formData, setFormData] = useState<Partial<SOAPNote>>({
     // Visit Information
     type_of_visit: '',
@@ -32,11 +36,11 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
     hpi: '',
     
     // Medical Information (prefill from patient data)
-    medical_history: patient.medical_history || [],
+    medical_history: currentPatient.medical_history || [],
     family_history: [],
     past_surgical_history: '',
     social_history: '',
-    current_medications: patient.current_medications || [],
+    current_medications: currentPatient.current_medications || [],
     
     // Physical Examination
     vitals: {
@@ -49,7 +53,7 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
       respiration: '',
       oxygen_saturation: ''
     },
-    allergies: patient.allergies || [],
+    allergies: currentPatient.allergies || [],
     ros: '',
     physical_examination: '',
     
@@ -80,6 +84,7 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [currentSoapNoteId, setCurrentSoapNoteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('voice-ai');
+  const [showPatientEditModal, setShowPatientEditModal] = useState(false);
 
   // Form field management for arrays
   const [newMedication, setNewMedication] = useState('');
@@ -148,9 +153,9 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
     try {
       setLoading(true);
       const patientHistory = [
-        ...(patient.medical_history || []),
-        ...(patient.current_medications || []).map(med => `Current medication: ${med}`),
-        ...(patient.allergies || []).map(allergy => `Allergy: ${allergy}`)
+        ...(currentPatient.medical_history || []),
+        ...(currentPatient.current_medications || []).map(med => `Current medication: ${med}`),
+        ...(currentPatient.allergies || []).map(allergy => `Allergy: ${allergy}`)
       ].join('; ');
 
       // Enhanced SOAP generation that fills comprehensive fields
@@ -187,11 +192,11 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
       setLoading(true);
       const symptoms = (formData.subjective || '') + ' ' + (formData.objective || '') + ' ' + (formData.chief_complaint || '');
       const suggestions = await GeminiService.provideDiagnosticSuggestions(symptoms, {
-        medical_history: patient.medical_history,
-        current_medications: patient.current_medications,
-        allergies: patient.allergies,
-        age: new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear(),
-        gender: patient.gender
+        medical_history: currentPatient.medical_history,
+        current_medications: currentPatient.current_medications,
+        allergies: currentPatient.allergies,
+        age: new Date().getFullYear() - new Date(currentPatient.date_of_birth).getFullYear(),
+        gender: currentPatient.gender
       });
       setAiSuggestions(suggestions);
     } catch (error) {
@@ -207,6 +212,21 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
       await SOAPService.updateSOAPNote(noteId, {
         voice_transcript: formData.voice_transcript
       });
+    }
+  };
+
+  const handlePatientUpdated = (updatedPatient: Patient) => {
+    setCurrentPatient(updatedPatient);
+    // Update form data with new patient information
+    setFormData(prev => ({
+      ...prev,
+      medical_history: updatedPatient.medical_history || [],
+      current_medications: updatedPatient.current_medications || [],
+      allergies: updatedPatient.allergies || []
+    }));
+    // Notify parent component
+    if (onPatientUpdated) {
+      onPatientUpdated(updatedPatient);
     }
   };
 
@@ -769,12 +789,24 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
                   <h2 className="text-xl font-bold">
                     SOAP Note (Internal Medicine Physician)
                   </h2>
-                  <p className="text-blue-100">
-                    {patient.first_name} {patient.last_name} (#{patient.medical_record_number})
-                    <br />
-                    {new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()}yrs {patient.gender}, 
-                    DOB: {format(new Date(patient.date_of_birth), 'MM-dd-yyyy')}
-                  </p>
+                  <div className="flex items-center space-x-3">
+                    <div>
+                      <p className="text-blue-100">
+                        {currentPatient.first_name} {currentPatient.last_name} (#{currentPatient.medical_record_number})
+                        <br />
+                        {new Date().getFullYear() - new Date(currentPatient.date_of_birth).getFullYear()}yrs {currentPatient.gender}, 
+                        DOB: {format(new Date(currentPatient.date_of_birth), 'MM-dd-yyyy')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowPatientEditModal(true)}
+                      className="flex items-center space-x-1 px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-400 text-sm"
+                      title="Edit Patient Medical Info"
+                    >
+                      <Edit className="h-3 w-3" />
+                      <span>Edit Patient</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -847,6 +879,15 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
           </div>
         </div>
       </div>
+
+      {/* Patient Edit Modal */}
+      {showPatientEditModal && (
+        <PatientEditModal
+          patient={currentPatient}
+          onClose={() => setShowPatientEditModal(false)}
+          onPatientUpdated={handlePatientUpdated}
+        />
+      )}
     </div>
   );
 };

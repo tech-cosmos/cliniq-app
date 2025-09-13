@@ -1,14 +1,15 @@
 import React from 'react';
 import { Patient } from '../types/database';
-import { User, Calendar, Phone, Mail, FileText, AlertTriangle, ArrowRight } from 'lucide-react';
+import { User, Calendar, Phone, Mail, FileText, AlertTriangle, ArrowRight, Edit3 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface PatientCardProps {
   patient: Patient;
   onClick: (patient: Patient) => void;
+  onEditClick?: (patient: Patient) => void;
 }
 
-export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick }) => {
+export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick, onEditClick }) => {
   const age = new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear();
 
   return (
@@ -36,6 +37,18 @@ export const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick }) =>
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          {onEditClick && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditClick(patient);
+              }}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit Patient Info"
+            >
+              <Edit3 className="h-4 w-4" />
+            </button>
+          )}
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
             Active
           </span>
