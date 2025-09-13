@@ -73,6 +73,26 @@ CREATE TABLE voice_sessions (
   status VARCHAR(20) CHECK (status IN ('recording', 'processing', 'completed', 'error')) DEFAULT 'recording'
 );
 
+CREATE TABLE biometrics (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  patient_id UUID REFERENCES patients(id) ON DELETE CASCADE,
+  timepoint VARCHAR(20) NOT NULL CHECK (timepoint IN ('baseline', '3m', '6m', '12m')),
+  -- Cardiopulmonary metrics
+  six_minute_walk_distance DECIMAL(6,2), -- 6MWD in meters
+  fev1_percent DECIMAL(5,2), -- FEV1 as percentage
+  -- Neurologic/Functional metrics
+  gait_speed DECIMAL(4,2), -- m/s
+  grip_strength DECIMAL(5,2), -- kg
+  -- Metabolic/Inflammatory metrics
+  ldl_c DECIMAL(6,2), -- mg/dL
+  alt DECIMAL(6,2), -- U/L
+  -- Patient-Reported metrics
+  quality_of_life INTEGER CHECK (quality_of_life >= 0 AND quality_of_life <= 100), -- 0-100 scale
+  fatigue_score DECIMAL(3,1) CHECK (fatigue_score >= 0 AND fatigue_score <= 10) -- 0-10 scale
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_patients_medical_record ON patients(medical_record_number);
 CREATE INDEX idx_soap_notes_patient ON soap_notes(patient_id);
@@ -81,6 +101,8 @@ CREATE INDEX idx_soap_notes_created_at ON soap_notes(created_at);
 CREATE INDEX idx_medical_scans_patient ON medical_scans(patient_id);
 CREATE INDEX idx_medical_scans_soap_note ON medical_scans(soap_note_id);
 CREATE INDEX idx_voice_sessions_soap_note ON voice_sessions(soap_note_id);
+CREATE INDEX idx_biometrics_patient ON biometrics(patient_id);
+CREATE INDEX idx_biometrics_timepoint ON biometrics(timepoint);
 
 -- Enable Row Level Security
 ALTER TABLE doctors ENABLE ROW LEVEL SECURITY;
@@ -88,6 +110,7 @@ ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE soap_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE medical_scans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE voice_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE biometrics ENABLE ROW LEVEL SECURITY;
 
 -- Create policies (basic setup - adjust based on your authentication needs)
 CREATE POLICY "Doctors can view all patients" ON patients FOR SELECT TO authenticated USING (true);
@@ -106,6 +129,10 @@ CREATE POLICY "Doctors can view all voice sessions" ON voice_sessions FOR SELECT
 CREATE POLICY "Doctors can insert voice sessions" ON voice_sessions FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "Doctors can update voice sessions" ON voice_sessions FOR UPDATE TO authenticated USING (true);
 
+CREATE POLICY "Doctors can view all biometrics" ON biometrics FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Doctors can insert biometrics" ON biometrics FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Doctors can update biometrics" ON biometrics FOR UPDATE TO authenticated USING (true);
+
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -120,4 +147,7 @@ CREATE TRIGGER update_patients_updated_at BEFORE UPDATE ON patients
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_soap_notes_updated_at BEFORE UPDATE ON soap_notes
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_biometrics_updated_at BEFORE UPDATE ON biometrics
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
