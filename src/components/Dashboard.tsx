@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Patient, SOAPNote, MedicalScan } from '../types/database';
 import { PatientCard } from './PatientCard';
-import { SOAPNoteEditor } from './SOAPNoteEditor';
+import { ComprehensiveSOAPNoteEditor } from './ComprehensiveSOAPNoteEditor';
 import { ScanUploader } from './ScanUploader';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
 import { NewPatientModal } from './NewPatientModal';
@@ -375,7 +375,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
 
       {/* Modals */}
       {showSOAPEditor && selectedPatient && (
-        <SOAPNoteEditor
+        <ComprehensiveSOAPNoteEditor
           patient={selectedPatient}
           soapNote={currentSOAP}
           doctorId={doctorId}

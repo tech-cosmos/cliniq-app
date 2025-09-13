@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Patient, SOAPNote, MedicalScan } from '../types/database';
-import { SOAPNoteEditor } from './SOAPNoteEditor';
+import { ComprehensiveSOAPNoteEditor } from './ComprehensiveSOAPNoteEditor';
 import { ScanUploader } from './ScanUploader';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
 import PatientService from '../services/patient';
@@ -623,7 +623,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
 
       {/* Modals */}
       {showSOAPEditor && patient && (
-        <SOAPNoteEditor
+        <ComprehensiveSOAPNoteEditor
           patient={patient}
           soapNote={currentSOAP}
           doctorId={doctorId}

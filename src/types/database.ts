@@ -24,15 +24,61 @@ export interface SOAPNote {
   updated_at: string;
   patient_id: string;
   doctor_id: string;
+  
+  // Visit Information
+  type_of_visit?: string;
+  date_of_service?: string;
+  chief_complaint?: string;
+  
+  // Clinical Notes
+  nurses_note?: string;
+  hpi?: string; // History of Present Illness
+  
+  // Medical Information
+  medical_history?: string[];
+  family_history?: string[];
+  past_surgical_history?: string;
+  social_history?: string;
+  current_medications?: string[];
+  
+  // Physical Examination
+  vitals?: {
+    bp?: string;
+    pulse?: string;
+    temperature?: string;
+    weight?: string;
+    height?: string;
+    bmi?: string;
+    respiration?: string;
+    oxygen_saturation?: string;
+  };
+  
+  allergies?: string[];
+  ros?: string; // Review of Systems
+  physical_examination?: string;
+  
+  // Diagnosis
+  diagnosis_for_visit?: string[];
+  active_diagnosis_list?: string[];
+  
+  // Traditional SOAP
   subjective: string;
   objective: string;
   assessment: string;
   plan: string;
+  
+  // Services and Follow-up
+  services?: string[];
+  immunizations?: string[];
+  next_visit?: string;
+  
+  // Meta
   voice_transcript?: string;
   ai_generated_content?: boolean;
   ai_diagnostic_suggestions?: string[];
   follow_up_date?: string;
   status: 'draft' | 'completed' | 'reviewed';
+  updated_by?: string;
 }
 
 export interface MedicalScan {
