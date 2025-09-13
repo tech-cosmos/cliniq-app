@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Patient, SOAPNote, MedicalScan } from '../types/database';
 import PatientService from '../services/patient';
-import { User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText, Image, Brain } from 'lucide-react';
+import { User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText, Image, Brain, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface PatientProfileProps {
@@ -10,6 +10,8 @@ interface PatientProfileProps {
   onNewSOAPNote?: (patient: Patient) => void;
   onUploadScan?: (patient: Patient) => void;
   onDiagnosticAssistant?: (patient: Patient) => void;
+  onRefreshNeeded?: () => void;
+  autoSwitchToScansTab?: boolean;
 }
 
 export const PatientProfile: React.FC<PatientProfileProps> = ({ 
@@ -17,21 +19,39 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({
   onClose, 
   onNewSOAPNote, 
   onUploadScan, 
-  onDiagnosticAssistant 
+  onDiagnosticAssistant,
+  onRefreshNeeded,
+  autoSwitchToScansTab
 }) => {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [soapNotes, setSoapNotes] = useState<SOAPNote[]>([]);
   const [medicalScans, setMedicalScans] = useState<MedicalScan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'scans'>('overview');
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadPatientData();
   }, [patientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadPatientData = async () => {
+  useEffect(() => {
+    if (autoSwitchToScansTab) {
+      setActiveTab('scans');
+      // Auto-refresh to show the new scan
+      setTimeout(() => {
+        handleRefresh();
+      }, 1000); // Small delay to ensure scan is processed
+    }
+  }, [autoSwitchToScansTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadPatientData = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       const data = await PatientService.getPatientHistory(patientId);
       setPatient(data.patient);
       setSoapNotes(data.soapNotes);
@@ -40,8 +60,51 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({
       console.error('Failed to load patient data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const handleRefresh = () => {
+    loadPatientData(true);
+    if (onRefreshNeeded) {
+      onRefreshNeeded();
+    }
+  };
+
+  const startPollingForAnalysis = () => {
+    // Don't start polling if already polling
+    if (pollingInterval) return;
+    
+    const interval = setInterval(() => {
+      loadPatientData(true);
+    }, 5000); // Poll every 5 seconds
+    
+    setPollingInterval(interval);
+  };
+
+  const stopPollingForAnalysis = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+  };
+
+  // Check if there are any scans still being analyzed
+  const hasScansBeingAnalyzed = medicalScans.some(scan => !scan.ai_analysis);
+
+  // Start/stop polling based on whether there are scans being analyzed
+  useEffect(() => {
+    if (hasScansBeingAnalyzed && activeTab === 'scans') {
+      startPollingForAnalysis();
+    } else {
+      stopPollingForAnalysis();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      stopPollingForAnalysis();
+    };
+  }, [hasScansBeingAnalyzed, activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateSummary = async () => {
     if (!patient) return;
@@ -330,6 +393,27 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({
 
             {activeTab === 'scans' && (
               <div className="space-y-4">
+                {/* Refresh Button */}
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Medical Scans ({medicalScans.length})
+                  </h3>
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-lg disabled:opacity-50 ${
+                      pollingInterval 
+                        ? 'bg-green-600 hover:bg-green-700 text-white' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    <RefreshCw className={`h-4 w-4 ${refreshing || pollingInterval ? 'animate-spin' : ''}`} />
+                    <span>
+                      {refreshing ? 'Refreshing...' : pollingInterval ? 'Auto-refresh ON' : 'Refresh'}
+                    </span>
+                  </button>
+                </div>
+                
                 {medicalScans.length > 0 ? (
                   medicalScans.map((scan) => (
                     <div key={scan.id} className="bg-white border rounded-lg p-4 shadow-sm">
@@ -352,10 +436,38 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({
                           </p>
                         </div>
                       </div>
-                      {scan.ai_analysis && (
+                      {scan.ai_analysis ? (
                         <div className="bg-gray-50 p-3 rounded mt-3">
                           <h5 className="font-medium text-sm text-gray-600 mb-2">AI Analysis</h5>
                           <p className="text-sm">{scan.ai_analysis}</p>
+                          {scan.ai_findings && scan.ai_findings.length > 0 && (
+                            <div className="mt-2">
+                              <h6 className="font-medium text-xs text-gray-500 mb-1">Key Findings:</h6>
+                              <ul className="text-xs text-gray-600 list-disc list-inside">
+                                {scan.ai_findings.map((finding, index) => (
+                                  <li key={index}>{finding}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="bg-purple-50 p-3 rounded mt-3 border border-purple-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
+                              <h5 className="font-medium text-sm text-purple-700">AI Analysis in Progress</h5>
+                            </div>
+                            {pollingInterval && (
+                              <div className="flex items-center space-x-1">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-green-600">Auto-refreshing</span>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-purple-600 mt-1">
+                            This scan is being analyzed by our AI system. Results will appear automatically when ready.
+                          </p>
                         </div>
                       )}
                     </div>

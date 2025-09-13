@@ -33,6 +33,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
   const [showDiagnosticAssistant, setShowDiagnosticAssistant] = useState(false);
   const [currentSOAP, setCurrentSOAP] = useState<SOAPNote | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'recent' | 'critical'>('all');
+  const [scanJustUploaded, setScanJustUploaded] = useState(false);
 
   // Dashboard stats
   const [stats, setStats] = useState({
@@ -141,7 +142,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
 
   const handleScanUploaded = (scan: MedicalScan) => {
     setShowScanUploader(false);
-    // Refresh patient data if needed
+    setScanJustUploaded(true);
+    // Trigger refresh of patient list to update scan counts
+    loadPatients();
   };
 
   const StatCard: React.FC<{ title: string; value: number; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
@@ -323,10 +326,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
           onClose={() => {
             setShowPatientProfile(false);
             setSelectedPatient(null);
+            setScanJustUploaded(false);
           }}
           onNewSOAPNote={handleNewSOAPNote}
           onUploadScan={handleUploadScan}
           onDiagnosticAssistant={handleDiagnosticAssistant}
+          onRefreshNeeded={loadPatients}
+          autoSwitchToScansTab={scanJustUploaded}
         />
       )}
 
