@@ -85,7 +85,22 @@ export const SOAPNoteEditor: React.FC<SOAPNoteEditorProps> = ({
         noteId = await createNewSOAPNote();
       }
 
-      const updatedNote = await SOAPService.updateSOAPNote(noteId, formData);
+      // Prepare data with proper date handling
+      const saveData: Partial<SOAPNote> = {
+        subjective: formData.subjective,
+        objective: formData.objective,
+        assessment: formData.assessment,
+        plan: formData.plan,
+        voice_transcript: formData.voice_transcript,
+        status: formData.status
+      };
+      
+      // Only include follow_up_date if it's not empty
+      if (formData.follow_up_date && formData.follow_up_date.trim()) {
+        saveData.follow_up_date = formData.follow_up_date;
+      }
+
+      const updatedNote = await SOAPService.updateSOAPNote(noteId, saveData);
       onSave(updatedNote);
     } catch (error) {
       console.error('Failed to save SOAP note:', error);
