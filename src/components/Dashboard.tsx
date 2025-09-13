@@ -67,12 +67,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
   };
 
   const calculateStats = async (patientsData: Patient[]) => {
-    // This would typically involve additional API calls to get comprehensive stats
+    // Calculate critical cases based on patients with allergies (as an indicator of critical attention needed)
+    const criticalCases = patientsData.filter(patient => 
+      patient.allergies && patient.allergies.length > 0
+    ).length;
+
     setStats({
       totalPatients: patientsData.length,
       todayNotes: 0, // Would fetch from SOAP notes API
       pendingScans: 0, // Would fetch from scans API
-      criticalCases: 0 // Would fetch based on urgency levels
+      criticalCases: criticalCases
     });
   };
 
@@ -258,7 +262,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
                   >
                     <X className="h-5 w-5" />
                   </button>
-                )}\n              </div>
+                )}              </div>
             </div>
             
             <div className="flex items-center space-x-4">
