@@ -6,6 +6,7 @@ import { ComprehensiveSOAPNoteEditor } from './ComprehensiveSOAPNoteEditor';
 import { ScanUploader } from './ScanUploader';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
 import { NewPatientModal } from './NewPatientModal';
+import { BasicPatientEditor } from './BasicPatientEditor';
 import PatientService from '../services/patient';
 import { 
   Search, 
@@ -34,6 +35,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
   const [showScanUploader, setShowScanUploader] = useState(false);
   const [showDiagnosticAssistant, setShowDiagnosticAssistant] = useState(false);
   const [showNewPatientModal, setShowNewPatientModal] = useState(false);
+  const [showBasicPatientEditor, setShowBasicPatientEditor] = useState(false);
   const [currentSOAP, setCurrentSOAP] = useState<SOAPNote | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'recent' | 'critical'>('all');
 
@@ -365,6 +367,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
                     key={patient.id}
                     patient={patient}
                     onClick={handlePatientClick}
+                    onEditClick={(patient) => {
+                      setSelectedPatient(patient);
+                      setShowBasicPatientEditor(true);
+                    }}
                   />
                 ))}
               </div>
@@ -384,6 +390,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
             setShowSOAPEditor(false);
             setSelectedPatient(null);
             setCurrentSOAP(null);
+          }}
+          onPatientUpdated={(updatedPatient) => {
+            setSelectedPatient(updatedPatient);
+            // Refresh patients list to show updated info
+            loadPatients();
           }}
         />
       )}
@@ -434,6 +445,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
         <NewPatientModal
           onClose={() => setShowNewPatientModal(false)}
           onPatientCreated={handleNewPatientCreated}
+        />
+      )}
+
+      {showBasicPatientEditor && selectedPatient && (
+        <BasicPatientEditor
+          patient={selectedPatient}
+          onClose={() => {
+            setShowBasicPatientEditor(false);
+            setSelectedPatient(null);
+          }}
+          onPatientUpdated={(updatedPatient) => {
+            setSelectedPatient(updatedPatient);
+            // Refresh patients list to show updated info
+            loadPatients();
+          }}
         />
       )}
     </div>
