@@ -1,24 +1,14 @@
 import React from 'react';
-import logo from './logo.svg';
+import { Dashboard } from './components/Dashboard';
 import './App.css';
 
 function App() {
+  // In a real app, you would have authentication and get the doctor ID from the authenticated user
+  const doctorId = 'sample-doctor-id';
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Dashboard doctorId={doctorId} />
     </div>
   );
 }
