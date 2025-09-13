@@ -114,3 +114,27 @@ export interface VoiceSession {
   audio_duration: number;
   status: 'recording' | 'processing' | 'completed' | 'error';
 }
+
+export interface Biometrics {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  patient_id: string;
+  timepoint: 'baseline' | '3m' | '6m' | '12m';
+
+  // Cardiopulmonary metrics
+  six_minute_walk_distance?: number; // 6MWD in meters
+  fev1_percent?: number; // FEV1 as percentage
+
+  // Neurologic/Functional metrics
+  gait_speed?: number; // m/s
+  grip_strength?: number; // kg
+
+  // Metabolic/Inflammatory metrics
+  ldl_c?: number; // LDL-C in mg/dL
+  alt?: number; // ALT in U/L
+
+  // Patient-Reported metrics
+  quality_of_life?: number; // 0-100 scale
+  fatigue_score?: number; // 0-10 scale
+}
