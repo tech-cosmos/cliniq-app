@@ -5,10 +5,11 @@ import { Patient, SOAPNote, MedicalScan } from '../types/database';
 import { ComprehensiveSOAPNoteEditor } from './ComprehensiveSOAPNoteEditor';
 import { ScanUploader } from './ScanUploader';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
+import { BiometricsSection } from './BiometricsSection';
 import PatientService from '../services/patient';
-import { 
-  User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText, 
-  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus 
+import {
+  User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText,
+  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -16,7 +17,7 @@ interface PatientViewProps {
   doctorId: string;
 }
 
-type DrawerSection = 'overview' | 'notes' | 'scans';
+type DrawerSection = 'overview' | 'notes' | 'scans' | 'biometrics';
 
 export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
   const { patientId } = useParams<{ patientId: string }>();
@@ -187,6 +188,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
     { id: 'overview', label: 'Overview', icon: User, count: null },
     { id: 'notes', label: 'SOAP Notes', icon: FileText, count: soapNotes.length },
     { id: 'scans', label: 'Medical Scans', icon: Image, count: medicalScans.length },
+    { id: 'biometrics', label: 'Biometrics', icon: TrendingUp, count: null },
   ];
 
   return (
@@ -616,6 +618,10 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                   )}
                 </div>
               </div>
+            )}
+
+            {activeSection === 'biometrics' && (
+              <BiometricsSection patientId={patient.id} />
             )}
           </div>
         </div>
