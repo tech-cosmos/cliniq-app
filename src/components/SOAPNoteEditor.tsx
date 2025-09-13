@@ -180,7 +180,13 @@ export const SOAPNoteEditor: React.FC<SOAPNoteEditorProps> = ({
               </div>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setShowVoiceRecorder(!showVoiceRecorder)}
+                  onClick={async () => {
+                    if (!showVoiceRecorder && !currentSoapNoteId) {
+                      // Create SOAP note first if it doesn't exist
+                      await createNewSOAPNote();
+                    }
+                    setShowVoiceRecorder(!showVoiceRecorder);
+                  }}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
                     showVoiceRecorder 
                       ? 'bg-red-500 hover:bg-red-600' 
@@ -205,9 +211,9 @@ export const SOAPNoteEditor: React.FC<SOAPNoteEditorProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main SOAP Form */}
               <div className="lg:col-span-2 space-y-6">
-                {showVoiceRecorder && (
+                {showVoiceRecorder && currentSoapNoteId && (
                   <VoiceRecorder
-                    soapNoteId={currentSoapNoteId || ''}
+                    soapNoteId={currentSoapNoteId}
                     onTranscriptUpdate={handleVoiceTranscriptUpdate}
                     onRecordingComplete={handleRecordingComplete}
                   />

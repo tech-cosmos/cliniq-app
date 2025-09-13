@@ -324,6 +324,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
             setShowPatientProfile(false);
             setSelectedPatient(null);
           }}
+          onNewSOAPNote={handleNewSOAPNote}
+          onUploadScan={handleUploadScan}
+          onDiagnosticAssistant={handleDiagnosticAssistant}
         />
       )}
 
