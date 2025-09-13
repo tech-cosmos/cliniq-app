@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Biometrics } from '../types/database';
 import { BiometricsChart } from './BiometricsChart';
 import BiometricsService from '../services/biometrics';
-import { TrendingUp, Activity, Brain, Heart } from 'lucide-react';
+import { TrendingUp, Activity, Brain, Heart, Download } from 'lucide-react';
 
 interface BiometricsSectionProps {
   patientId: string;
@@ -34,6 +34,55 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
   };
 
   const categories = BiometricsService.getMetricCategories();
+
+  const exportToCSV = () => {
+    if (biometrics.length === 0) return;
+
+    const timepointLabels = BiometricsService.getTimepointLabels();
+
+    // Create CSV headers
+    const headers = ['Timepoint'];
+    Object.entries(categories).forEach(([categoryKey, category]) => {
+      Object.entries(category.metrics).forEach(([metricKey, metric]) => {
+        headers.push(`${metric.label} ${metric.unit}`);
+      });
+    });
+
+    // Create CSV rows
+    const rows = [headers];
+    ['baseline', '3m', '6m', '12m'].forEach(timepoint => {
+      const timepointData = biometrics.find(b => b.timepoint === timepoint);
+      const row = [timepointLabels[timepoint as keyof typeof timepointLabels]];
+
+      Object.entries(categories).forEach(([categoryKey, category]) => {
+        Object.entries(category.metrics).forEach(([metricKey, metric]) => {
+          if (timepointData) {
+            const value = BiometricsService.formatMetricValue(metricKey, timepointData[metricKey as keyof Biometrics] as number);
+            row.push(value);
+          } else {
+            row.push('N/A');
+          }
+        });
+      });
+      rows.push(row);
+    });
+
+    // Convert to CSV string
+    const csvContent = rows.map(row => row.join(',')).join('\n');
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `biometrics-data-${patientId}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   const getCategoryIcon = (categoryKey: string) => {
     switch (categoryKey) {
@@ -95,12 +144,18 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Biometrics</h2>
-        <div className="text-sm text-gray-500">
-          {biometrics.length} data points across {new Set(biometrics.map(b => b.timepoint)).size} timepoints
-          {/* Debug info */}
-          <div className="text-xs text-blue-600 mt-1">
-            Patient ID: {patientId}
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-500">
+            {biometrics.length} data points across {new Set(biometrics.map(b => b.timepoint)).size} timepoints
           </div>
+          <button
+            onClick={exportToCSV}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            title="Export data to CSV"
+          >
+            <Download className="h-4 w-4" />
+            <span>Export CSV</span>
+          </button>
         </div>
       </div>
 
@@ -131,55 +186,6 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
           </div>
         );
       })}
-
-      {/* Summary table */}
-      <div className="bg-white border rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b bg-gray-50">
-          <h3 className="text-lg font-semibold text-gray-900">Data Summary</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Timepoint
-                </th>
-                {Object.entries(categories).map(([categoryKey, category]) =>
-                  Object.entries(category.metrics).map(([metricKey, metric]) => (
-                    <th key={metricKey} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {metric.label} {metric.unit}
-                    </th>
-                  ))
-                )}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {['baseline', '3m', '6m', '12m'].map(timepoint => {
-                const timepointData = biometrics.find(b => b.timepoint === timepoint);
-                const timepointLabels = BiometricsService.getTimepointLabels();
-
-                return (
-                  <tr key={timepoint} className={timepointData ? '' : 'opacity-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {timepointLabels[timepoint as keyof typeof timepointLabels]}
-                    </td>
-                    {Object.entries(categories).map(([categoryKey, category]) =>
-                      Object.entries(category.metrics).map(([metricKey, metric]) => (
-                        <td key={metricKey} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {timepointData
-                            ? BiometricsService.formatMetricValue(metricKey, timepointData[metricKey as keyof Biometrics] as number)
-                            : 'N/A'
-                          }
-                        </td>
-                      ))
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 };

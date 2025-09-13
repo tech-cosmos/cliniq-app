@@ -166,20 +166,6 @@ export const BiometricsChart: React.FC<BiometricsChartProps> = ({
           </g>
         </svg>
 
-        {/* Chart legend and data summary */}
-        <div className="mt-2 text-xs text-gray-600">
-          <div className="flex justify-center items-center mb-2">
-            <span className="text-gray-500">Timeline →</span>
-          </div>
-          <div className="grid grid-cols-4 gap-2 text-xs">
-            {points.map((point, index) => (
-              <div key={index} className="text-center">
-                <div className="text-gray-500">{timepointLabels[point.timepoint as keyof typeof timepointLabels]}</div>
-                <div className="font-medium" style={{ color }}>{point.value.toFixed(1)}{metricUnit}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
