@@ -15,7 +15,8 @@ import {
   Brain, 
   Users,
   AlertTriangle,
-  Filter
+  Filter,
+  X
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -154,34 +155,48 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
     navigate(`/patient/${patient.id}`);
   };
 
-  const StatCard: React.FC<{ title: string; value: number; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
-    <div className={`bg-white p-6 rounded-lg shadow-md border-l-4 ${color}`}>
+  const StatCard: React.FC<{ title: string; value: number; icon: React.ReactNode; color: string; gradient: string }> = ({ title, value, icon, color, gradient }) => (
+    <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-300 hover:scale-105">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">{title}</p>
+          <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
         </div>
-        <div className="text-gray-400">
-          {icon}
+        <div className={`p-3 rounded-2xl shadow-md ${gradient}`}>
+          <div className="text-white">
+            {icon}
+          </div>
         </div>
       </div>
+      <div className={`mt-4 h-1 rounded-full ${color}`}></div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900">Cliniq</h1>
-              <span className="text-sm text-gray-500">AI-Powered Medical Assistant</span>
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-3">
+                <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-2 rounded-xl shadow-md">
+                  <FileText className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Cliniq
+                  </h1>
+                  <span className="text-sm text-gray-500 font-medium">AI-Powered Medical Assistant</span>
+                </div>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Dr. Smith</span>
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                DS
+              <div className="flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
+                <span className="text-sm font-medium text-gray-700">Dr. Smith</span>
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
+                  DS
+                </div>
               </div>
             </div>
           </div>
@@ -190,56 +205,69 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Total Patients"
             value={stats.totalPatients}
-            icon={<Users className="h-8 w-8" />}
-            color="border-blue-500"
+            icon={<Users className="h-7 w-7" />}
+            color="bg-gradient-to-r from-blue-500 to-blue-600"
+            gradient="bg-gradient-to-br from-blue-500 to-blue-600"
           />
           <StatCard
             title="Today's Notes"
             value={stats.todayNotes}
-            icon={<FileText className="h-8 w-8" />}
-            color="border-green-500"
+            icon={<FileText className="h-7 w-7" />}
+            color="bg-gradient-to-r from-green-500 to-green-600"
+            gradient="bg-gradient-to-br from-green-500 to-green-600"
           />
           <StatCard
             title="Pending Scans"
             value={stats.pendingScans}
-            icon={<Image className="h-8 w-8" />}
-            color="border-yellow-500"
+            icon={<Image className="h-7 w-7" />}
+            color="bg-gradient-to-r from-amber-500 to-orange-500"
+            gradient="bg-gradient-to-br from-amber-500 to-orange-500"
           />
           <StatCard
             title="Critical Cases"
             value={stats.criticalCases}
-            icon={<AlertTriangle className="h-8 w-8" />}
-            color="border-red-500"
+            icon={<AlertTriangle className="h-7 w-7" />}
+            color="bg-gradient-to-r from-red-500 to-red-600"
+            gradient="bg-gradient-to-br from-red-500 to-red-600"
           />
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-            <div className="flex-1 max-w-lg">
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 gap-4">
+            <div className="flex-1 max-w-2xl">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   type="text"
-                  placeholder="Search patients by name or MRN..."
+                  placeholder="Search patients by name, MRN, or medical condition..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-12 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 font-medium"
                 />
-              </div>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}\n              </div>
             </div>
             
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2">
-                <Filter className="h-4 w-4 text-gray-400" />
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3 bg-gray-50 rounded-2xl px-4 py-3">
+                <Filter className="h-5 w-5 text-gray-500" />
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value as any)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="bg-transparent border-none focus:ring-0 text-gray-700 font-medium cursor-pointer"
                 >
                   <option value="all">All Patients</option>
                   <option value="recent">Recent Activity</option>
@@ -249,9 +277,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
               
               <button
                 onClick={() => setShowNewPatientModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5" />
                 <span>New Patient</span>
               </button>
             </div>
@@ -259,68 +287,83 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
         </div>
 
         {/* Patients List */}
-        <div className="bg-white rounded-lg shadow-md">
-          <div className="p-6 border-b">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Patients ({filteredPatients.length})
-            </h2>
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50">
+          <div className="px-6 py-5 border-b border-gray-200/50">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Patients
+                <span className="ml-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                  {filteredPatients.length}
+                </span>
+              </h2>
+              {filteredPatients.length > 0 && (
+                <div className="text-sm text-gray-500 font-medium">
+                  {filterType === 'all' ? 'All patients' : 
+                   filterType === 'recent' ? 'Recent activity' : 'Critical cases'}
+                </div>
+              )}
+            </div>
           </div>
           
           {loading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading patients...</p>
+            <div className="p-12 text-center">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto mb-6"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                </div>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading Patients</h3>
+              <p className="text-gray-600">Fetching patient records from the database...</p>
             </div>
           ) : filteredPatients.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              {searchTerm ? 'No patients found matching your search.' : 'No patients found.'}
+            <div className="p-12 text-center">
+              {searchTerm ? (
+                <div>
+                  <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+                    <Search className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No Results Found</h3>
+                  <p className="text-gray-600 mb-6">
+                    No patients found matching "<span className="font-semibold text-gray-900">{searchTerm}</span>"
+                  </p>
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="bg-blue-100 rounded-full p-4 w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No Patients Yet</h3>
+                  <p className="text-gray-600 mb-6">
+                    Get started by adding your first patient to the system.
+                  </p>
+                  <button
+                    onClick={() => setShowNewPatientModal(true)}
+                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 font-semibold shadow-lg"
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Add First Patient
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-              {filteredPatients.map((patient) => (
-                <div key={patient.id} className="relative">
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredPatients.map((patient) => (
                   <PatientCard
+                    key={patient.id}
                     patient={patient}
                     onClick={handlePatientClick}
                   />
-                  
-                  {/* Quick Actions */}
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="flex space-x-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleNewSOAPNote(patient);
-                        }}
-                        className="p-1 bg-blue-600 text-white rounded-full hover:bg-blue-700"
-                        title="New SOAP Note"
-                      >
-                        <FileText className="h-3 w-3" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleUploadScan(patient);
-                        }}
-                        className="p-1 bg-green-600 text-white rounded-full hover:bg-green-700"
-                        title="Upload Scan"
-                      >
-                        <Image className="h-3 w-3" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDiagnosticAssistant(patient);
-                        }}
-                        className="p-1 bg-purple-600 text-white rounded-full hover:bg-purple-700"
-                        title="AI Assistant"
-                      >
-                        <Brain className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
