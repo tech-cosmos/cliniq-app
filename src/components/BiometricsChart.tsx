@@ -60,11 +60,12 @@ export const BiometricsChart: React.FC<BiometricsChartProps> = ({
   const innerWidth = chartWidth - (padding * 2);
   const innerHeight = chartHeight - (padding * 2);
 
-  // Calculate points for the line chart
+  // Calculate points for the line chart - Timeline on X-axis, Values on Y-axis
   const points = sortedData.map((d, index) => {
     const rawValue = d[metricKey as keyof Biometrics];
     const value = typeof rawValue === 'string' ? parseFloat(rawValue) : Number(rawValue);
     const numValue = isNaN(value) ? 0 : value;
+    // X = timepoint position (horizontal), Y = value position (vertical, inverted)
     const x = padding + (index * innerWidth / Math.max(sortedData.length - 1, 1));
     const y = padding + innerHeight - ((numValue - minValue) / valueRange * innerHeight);
     return { x, y, value: numValue, timepoint: d.timepoint };
@@ -88,14 +89,26 @@ export const BiometricsChart: React.FC<BiometricsChartProps> = ({
             </pattern>
           </defs>
 
-          {/* Y-axis labels */}
+          {/* Y-axis labels (values with units) */}
           <g className="text-xs text-gray-500">
             <text x={padding - 5} y={padding + 4} textAnchor="end">
-              {maxValue.toFixed(1)}
+              {maxValue.toFixed(1)}{metricUnit}
             </text>
             <text x={padding - 5} y={chartHeight - padding + 4} textAnchor="end">
-              {minValue.toFixed(1)}
+              {minValue.toFixed(1)}{metricUnit}
             </text>
+          </g>
+
+          {/* X-axis labels (timepoints) */}
+          <g className="text-xs text-gray-500">
+            {sortedData.map((d, index) => {
+              const x = padding + (index * innerWidth / Math.max(sortedData.length - 1, 1));
+              return (
+                <text key={index} x={x} y={chartHeight - padding + 15} textAnchor="middle">
+                  {timepointLabels[d.timepoint as keyof typeof timepointLabels]}
+                </text>
+              );
+            })}
           </g>
 
           {/* Line chart */}
@@ -113,9 +126,9 @@ export const BiometricsChart: React.FC<BiometricsChartProps> = ({
               <circle
                 cx={point.x}
                 cy={point.y}
-                r="4"
+                r="5"
                 fill={color}
-                className="drop-shadow-sm"
+                className="drop-shadow-sm cursor-pointer hover:r-6"
               />
               <circle
                 cx={point.x}
@@ -123,18 +136,49 @@ export const BiometricsChart: React.FC<BiometricsChartProps> = ({
                 r="2"
                 fill="white"
               />
+              <title>{`${timepointLabels[point.timepoint as keyof typeof timepointLabels]}: ${point.value.toFixed(1)} ${metricUnit}`}</title>
             </g>
           ))}
+          {/* Grid lines */}
+          <g stroke="#f3f4f6" strokeWidth="1">
+            {/* Vertical grid lines for each timepoint */}
+            {sortedData.map((d, index) => {
+              const x = padding + (index * innerWidth / Math.max(sortedData.length - 1, 1));
+              return (
+                <line key={index} x1={x} y1={padding} x2={x} y2={chartHeight - padding} strokeDasharray="2,2" />
+              );
+            })}
+            {/* Horizontal grid lines for values */}
+            {[0.25, 0.5, 0.75].map((ratio, index) => {
+              const y = padding + (ratio * innerHeight);
+              return (
+                <line key={index} x1={padding} y1={y} x2={chartWidth - padding} y2={y} strokeDasharray="2,2" />
+              );
+            })}
+          </g>
+
+          {/* Axis lines */}
+          <g stroke="#e5e7eb" strokeWidth="1">
+            {/* Y-axis line */}
+            <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} />
+            {/* X-axis line */}
+            <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} />
+          </g>
         </svg>
 
-        {/* X-axis labels */}
-        <div className="flex justify-between mt-2 px-5">
-          {points.map((point, index) => (
-            <div key={index} className="text-xs text-gray-500 text-center">
-              <div>{timepointLabels[point.timepoint as keyof typeof timepointLabels]}</div>
-              <div className="font-medium text-gray-700">{point.value.toFixed(1)}</div>
-            </div>
-          ))}
+        {/* Chart legend and data summary */}
+        <div className="mt-2 text-xs text-gray-600">
+          <div className="flex justify-center items-center mb-2">
+            <span className="text-gray-500">Timeline →</span>
+          </div>
+          <div className="grid grid-cols-4 gap-2 text-xs">
+            {points.map((point, index) => (
+              <div key={index} className="text-center">
+                <div className="text-gray-500">{timepointLabels[point.timepoint as keyof typeof timepointLabels]}</div>
+                <div className="font-medium" style={{ color }}>{point.value.toFixed(1)}{metricUnit}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
