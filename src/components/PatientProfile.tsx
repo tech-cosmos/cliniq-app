@@ -7,9 +7,18 @@ import { format } from 'date-fns';
 interface PatientProfileProps {
   patientId: string;
   onClose: () => void;
+  onNewSOAPNote?: (patient: Patient) => void;
+  onUploadScan?: (patient: Patient) => void;
+  onDiagnosticAssistant?: (patient: Patient) => void;
 }
 
-export const PatientProfile: React.FC<PatientProfileProps> = ({ patientId, onClose }) => {
+export const PatientProfile: React.FC<PatientProfileProps> = ({ 
+  patientId, 
+  onClose, 
+  onNewSOAPNote, 
+  onUploadScan, 
+  onDiagnosticAssistant 
+}) => {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [soapNotes, setSoapNotes] = useState<SOAPNote[]>([]);
   const [medicalScans, setMedicalScans] = useState<MedicalScan[]>([]);
@@ -87,12 +96,45 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({ patientId, onClo
                   <p className="text-blue-100">MRN: {patient.medical_record_number}</p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="text-white hover:text-gray-200 text-xl font-bold"
-              >
-                ×
-              </button>
+              <div className="flex items-center space-x-3">
+                {/* Action Buttons */}
+                {onNewSOAPNote && (
+                  <button
+                    onClick={() => onNewSOAPNote(patient)}
+                    className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors"
+                    title="New SOAP Note"
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span className="hidden sm:inline">New SOAP</span>
+                  </button>
+                )}
+                {onUploadScan && (
+                  <button
+                    onClick={() => onUploadScan(patient)}
+                    className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors"
+                    title="Upload Scan"
+                  >
+                    <Image className="h-4 w-4" />
+                    <span className="hidden sm:inline">Upload</span>
+                  </button>
+                )}
+                {onDiagnosticAssistant && (
+                  <button
+                    onClick={() => onDiagnosticAssistant(patient)}
+                    className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors"
+                    title="AI Assistant"
+                  >
+                    <Brain className="h-4 w-4" />
+                    <span className="hidden sm:inline">AI</span>
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="text-white hover:text-gray-200 text-xl font-bold ml-4"
+                >
+                  ×
+                </button>
+              </div>
             </div>
           </div>
 
