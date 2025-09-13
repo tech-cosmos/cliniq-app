@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Patient, SOAPNote, MedicalScan } from '../types/database';
 import { PatientCard } from './PatientCard';
-import { PatientProfile } from './PatientProfile';
 import { SOAPNoteEditor } from './SOAPNoteEditor';
 import { ScanUploader } from './ScanUploader';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
@@ -23,19 +23,18 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [showPatientProfile, setShowPatientProfile] = useState(false);
   const [showSOAPEditor, setShowSOAPEditor] = useState(false);
   const [showScanUploader, setShowScanUploader] = useState(false);
   const [showDiagnosticAssistant, setShowDiagnosticAssistant] = useState(false);
   const [showNewPatientModal, setShowNewPatientModal] = useState(false);
   const [currentSOAP, setCurrentSOAP] = useState<SOAPNote | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'recent' | 'critical'>('all');
-  const [scanJustUploaded, setScanJustUploaded] = useState(false);
 
   // Dashboard stats
   const [stats, setStats] = useState({
@@ -110,8 +109,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
   };
 
   const handlePatientClick = (patient: Patient) => {
-    setSelectedPatient(patient);
-    setShowPatientProfile(true);
+    navigate(`/patient/${patient.id}`);
   };
 
   const handleNewSOAPNote = (patient: Patient) => {
@@ -144,7 +142,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
 
   const handleScanUploaded = (scan: MedicalScan) => {
     setShowScanUploader(false);
-    setScanJustUploaded(true);
     // Trigger refresh of patient list to update scan counts
     loadPatients();
   };
@@ -153,9 +150,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
     setShowNewPatientModal(false);
     // Refresh the patient list to include the new patient
     loadPatients();
-    // Optionally, open the new patient's profile
-    setSelectedPatient(patient);
-    setShowPatientProfile(true);
+    // Navigate to the new patient's profile
+    navigate(`/patient/${patient.id}`);
   };
 
   const StatCard: React.FC<{ title: string; value: number; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => (
@@ -331,22 +327,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
       </div>
 
       {/* Modals */}
-      {showPatientProfile && selectedPatient && (
-        <PatientProfile
-          patientId={selectedPatient.id}
-          onClose={() => {
-            setShowPatientProfile(false);
-            setSelectedPatient(null);
-            setScanJustUploaded(false);
-          }}
-          onNewSOAPNote={handleNewSOAPNote}
-          onUploadScan={handleUploadScan}
-          onDiagnosticAssistant={handleDiagnosticAssistant}
-          onRefreshNeeded={loadPatients}
-          autoSwitchToScansTab={scanJustUploaded}
-        />
-      )}
-
       {showSOAPEditor && selectedPatient && (
         <SOAPNoteEditor
           patient={selectedPatient}
