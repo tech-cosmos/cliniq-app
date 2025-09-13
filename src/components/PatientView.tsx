@@ -229,6 +229,14 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
             
             <div className="flex items-center space-x-3">
               <button
+                onClick={() => setShowBasicPatientEditor(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                title="Edit Patient Info"
+              >
+                <Edit3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Edit Patient</span>
+              </button>
+              <button
                 onClick={handleNewSOAPNote}
                 className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 title="New SOAP Note"
@@ -648,6 +656,11 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
             setShowSOAPEditor(false);
             setCurrentSOAP(null);
           }}
+          onPatientUpdated={(updatedPatient) => {
+            setPatient(updatedPatient);
+            // Refresh patient data to show updated info
+            loadPatientData(true);
+          }}
         />
       )}
 
@@ -693,9 +706,11 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
         <BasicPatientEditor
           patient={patient}
           onClose={() => setShowBasicPatientEditor(false)}
-          onUpdate={(updatedPatient) => {
+          onPatientUpdated={(updatedPatient) => {
             setPatient(updatedPatient);
             setShowBasicPatientEditor(false);
+            // Refresh patient data to show updated info
+            loadPatientData(true);
           }}
         />
       )}
