@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Patient, SOAPNote, MedicalScan } from '../types/database';
 import PatientService from '../services/patient';
 import { User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText, Image, Brain, RefreshCw } from 'lucide-react';
@@ -340,7 +341,23 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({
                     </button>
                   </div>
                   {patient.ai_summary ? (
-                    <p className="text-purple-700 whitespace-pre-wrap">{patient.ai_summary}</p>
+                    <div className="text-purple-700 prose prose-sm max-w-none">
+                      <ReactMarkdown
+                        components={{
+                          // Custom styling for markdown elements
+                          h1: ({ node, ...props }) => <h1 className="text-lg font-bold text-purple-800 mb-2" {...props} />,
+                          h2: ({ node, ...props }) => <h2 className="text-md font-semibold text-purple-800 mb-2 mt-4" {...props} />,
+                          h3: ({ node, ...props }) => <h3 className="text-sm font-semibold text-purple-800 mb-1 mt-3" {...props} />,
+                          strong: ({ node, ...props }) => <strong className="font-bold text-purple-900" {...props} />,
+                          p: ({ node, ...props }) => <p className="mb-3 leading-relaxed" {...props} />,
+                          ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-3 space-y-1" {...props} />,
+                          ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-3 space-y-1" {...props} />,
+                          li: ({ node, ...props }) => <li className="text-purple-700" {...props} />,
+                        }}
+                      >
+                        {patient.ai_summary}
+                      </ReactMarkdown>
+                    </div>
                   ) : (
                     <p className="text-purple-600 italic">No AI summary available. Click "Generate Summary" to create one.</p>
                   )}
