@@ -4,11 +4,13 @@ import ReactMarkdown from 'react-markdown';
 import { Patient, SOAPNote, MedicalScan } from '../types/database';
 import { ComprehensiveSOAPNoteEditor } from './ComprehensiveSOAPNoteEditor';
 import { ScanUploader } from './ScanUploader';
+import { ScanViewer } from './ScanViewer';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
 import { BiometricsSection } from './BiometricsSection';
 import { BasicPatientEditor } from './BasicPatientEditor';
 import { DNAAnalysis } from './DNAAnalysis';
 import PatientService from '../services/patient';
+import MedicalScanService from '../services/medicalScan';
 import {
   User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText,
   Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, TrendingUp, Edit3, Activity
@@ -34,13 +36,16 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
   const [activeSection, setActiveSection] = useState<DrawerSection>('overview');
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
-  
+  const [scanImageUrls, setScanImageUrls] = useState<{[scanId: string]: string}>({});
+
   // Modals
   const [showSOAPEditor, setShowSOAPEditor] = useState(false);
   const [showScanUploader, setShowScanUploader] = useState(false);
+  const [showScanViewer, setShowScanViewer] = useState(false);
   const [showDiagnosticAssistant, setShowDiagnosticAssistant] = useState(false);
   const [showBasicPatientEditor, setShowBasicPatientEditor] = useState(false);
   const [currentSOAP, setCurrentSOAP] = useState<SOAPNote | null>(null);
+  const [selectedScan, setSelectedScan] = useState<MedicalScan | null>(null);
   const [scanJustUploaded, setScanJustUploaded] = useState(false);
 
   useEffect(() => {
@@ -60,7 +65,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
 
   const loadPatientData = async (isRefresh = false) => {
     if (!patientId) return;
-    
+
     try {
       if (isRefresh) {
         setRefreshing(true);
@@ -71,6 +76,20 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
       setPatient(data.patient);
       setSoapNotes(data.soapNotes);
       setMedicalScans(data.medicalScans);
+
+      // Load image URLs for all scans
+      if (data.medicalScans.length > 0) {
+        const imageUrls: {[scanId: string]: string} = {};
+        for (const scan of data.medicalScans) {
+          try {
+            const url = await MedicalScanService.getScanImageUrl(scan.file_path);
+            imageUrls[scan.id] = url;
+          } catch (error) {
+            console.error(`Failed to load image URL for scan ${scan.id}:`, error);
+          }
+        }
+        setScanImageUrls(imageUrls);
+      }
     } catch (error) {
       console.error('Failed to load patient data:', error);
     } finally {
@@ -156,6 +175,16 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
     setShowScanUploader(false);
     setScanJustUploaded(true);
     loadPatientData(true);
+  };
+
+  const handleScanClick = (scan: MedicalScan) => {
+    setSelectedScan(scan);
+    setShowScanViewer(true);
+  };
+
+  const handleScanViewerClose = () => {
+    setShowScanViewer(false);
+    setSelectedScan(null);
   };
 
   if (loading) {
@@ -981,33 +1010,45 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                           {/* Image Preview */}
                           <div className="mb-6">
                             <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-4 border border-gray-200">
-                              <div className="aspect-video bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl overflow-hidden relative group/image">
-                                <img 
-                                  src={scan.file_path} 
-                                  alt={`${scan.scan_type} scan`}
-                                  className="w-full h-full object-contain bg-black/5 group-hover/image:scale-105 transition-transform duration-300"
-                                  onError={(e) => {
-                                    // Fallback for broken images
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                    const parent = target.parentElement;
-                                    if (parent) {
-                                      parent.innerHTML = `
-                                        <div class="w-full h-full flex items-center justify-center">
-                                          <div class="text-center">
-                                            <div class="w-16 h-16 bg-gray-400/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                              </svg>
+                              <div
+                                className="aspect-video bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl overflow-hidden relative group/image cursor-pointer"
+                                onClick={() => handleScanClick(scan)}
+                              >
+                                {scanImageUrls[scan.id] ? (
+                                  <img
+                                    src={scanImageUrls[scan.id]}
+                                    alt={`${scan.scan_type} scan`}
+                                    className="w-full h-full object-contain bg-black/5 group-hover/image:scale-105 transition-transform duration-300"
+                                    onError={(e) => {
+                                      // Fallback for broken images
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                      const parent = target.parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = `
+                                          <div class="w-full h-full flex items-center justify-center">
+                                            <div class="text-center">
+                                              <div class="w-16 h-16 bg-gray-400/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                              </div>
+                                              <p class="text-gray-500 font-medium">${scan.scan_type.toUpperCase()} Scan</p>
+                                              <p class="text-gray-400 text-sm">Image preview not available</p>
                                             </div>
-                                            <p class="text-gray-500 font-medium">${scan.scan_type.toUpperCase()} Scan</p>
-                                            <p class="text-gray-400 text-sm">Image preview not available</p>
                                           </div>
-                                        </div>
-                                      `;
-                                    }
-                                  }}
-                                />
+                                        `;
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <div className="text-center">
+                                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600 mx-auto mb-4"></div>
+                                      <p className="text-gray-500 font-medium">Loading image...</p>
+                                    </div>
+                                  </div>
+                                )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                                 <div className="absolute bottom-4 left-4 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300">
                                   <span className="bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
@@ -1154,6 +1195,20 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
           onScanUploaded={handleScanUploaded}
           onClose={() => {
             setShowScanUploader(false);
+          }}
+        />
+      )}
+
+      {showScanViewer && selectedScan && (
+        <ScanViewer
+          scan={selectedScan}
+          onClose={handleScanViewerClose}
+          onUpdate={(updatedScan) => {
+            // Update the scan in the medical scans array
+            setMedicalScans(prev => prev.map(scan =>
+              scan.id === updatedScan.id ? updatedScan : scan
+            ));
+            setSelectedScan(updatedScan);
           }}
         />
       )}
