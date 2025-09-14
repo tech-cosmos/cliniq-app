@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SOAPNote, Patient } from '../types/database';
 import { VoiceRecorder } from './VoiceRecorder';
 import { PatientEditModal } from './PatientEditModal';
 import SOAPService from '../services/soap';
 import GeminiService from '../services/gemini';
-import { Save, Brain, Mic, FileText, User, Calendar, Plus, X, Edit } from 'lucide-react';
+import { Save, Brain, Mic, FileText, User, Calendar, Plus, X, Edit, Square } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ComprehensiveSOAPNoteEditorProps {
@@ -81,10 +81,12 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
 
   const [loading, setLoading] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [currentSoapNoteId, setCurrentSoapNoteId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('voice-ai');
   const [showPatientEditModal, setShowPatientEditModal] = useState(false);
+  const stopRecordingRef = useRef<(() => Promise<void>) | null>(null);
 
   // Form field management for arrays
   const [newMedication, setNewMedication] = useState('');
@@ -145,6 +147,53 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
 
   const handleVoiceTranscriptUpdate = (transcript: string) => {
     setFormData(prev => ({ ...prev, voice_transcript: transcript }));
+  };
+
+  const startRecording = async () => {
+    try {
+      if (!currentSoapNoteId) {
+        await createNewSOAPNote();
+      }
+      
+      setIsRecording(true);
+      setShowVoiceRecorder(true);
+      
+      const stopFunction = await SOAPService.processVoiceToSOAP(
+        currentSoapNoteId!,
+        (newTranscript: string) => {
+          handleVoiceTranscriptUpdate(newTranscript);
+        },
+        (error: any) => {
+          console.error('Voice recording error:', error);
+          setIsRecording(false);
+        }
+      );
+
+      stopRecordingRef.current = stopFunction;
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (stopRecordingRef.current) {
+      try {
+        await stopRecordingRef.current();
+        setIsRecording(false);
+        handleRecordingComplete();
+      } catch (error) {
+        console.error('Failed to stop recording:', error);
+      }
+    }
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording) {
+      await stopRecording();
+    } else {
+      await startRecording();
+    }
   };
 
   const generateComprehensiveSOAPFromVoice = async () => {
@@ -322,30 +371,49 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
               
               <div className="flex justify-center mb-6">
                 <button
-                  onClick={async () => {
-                    if (!showVoiceRecorder && !currentSoapNoteId) {
-                      await createNewSOAPNote();
-                    }
-                    setShowVoiceRecorder(!showVoiceRecorder);
-                  }}
+                  onClick={toggleRecording}
                   className={`flex items-center space-x-3 px-8 py-4 rounded-2xl font-semibold text-lg transition-all shadow-lg ${
-                    showVoiceRecorder 
+                    isRecording 
                       ? 'bg-red-600 hover:bg-red-700 text-white' 
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                 >
-                  <Mic className="h-6 w-6" />
-                  <span>{showVoiceRecorder ? 'Stop Recording' : 'Start Voice Recording'}</span>
+                  {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                  <span>{isRecording ? 'Stop Recording' : 'Start Voice Recording'}</span>
                 </button>
               </div>
 
-              {showVoiceRecorder && currentSoapNoteId && (
+              {isRecording && (
                 <div className="bg-white rounded-xl p-6 shadow-md">
-                  <VoiceRecorder
-                    soapNoteId={currentSoapNoteId}
-                    onTranscriptUpdate={handleVoiceTranscriptUpdate}
-                    onRecordingComplete={handleRecordingComplete}
-                  />
+                  <div className="flex items-center space-x-3 mb-4 p-3 bg-red-50 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                      <span className="text-red-700 font-medium">Recording in progress...</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-sm text-gray-600 mb-2">Live Transcript</h4>
+                    {formData.voice_transcript ? (
+                      <div className="bg-white p-3 rounded border min-h-[100px] whitespace-pre-wrap">
+                        {formData.voice_transcript}
+                      </div>
+                    ) : (
+                      <div className="bg-white p-3 rounded border min-h-[100px] flex items-center justify-center text-gray-500">
+                        Listening... Start speaking to see transcript here.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 text-sm text-gray-600">
+                    <p><strong>Tips:</strong></p>
+                    <ul className="list-disc list-inside space-y-1 mt-2">
+                      <li>Speak clearly and at a normal pace</li>
+                      <li>Use medical terminology as needed - the AI understands medical context</li>
+                      <li>Structure your dictation in SOAP format: Subjective, Objective, Assessment, Plan</li>
+                      <li>The transcript will automatically populate your SOAP note fields</li>
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>
