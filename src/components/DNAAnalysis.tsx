@@ -395,7 +395,7 @@ export const DNAAnalysis: React.FC<DNAAnalysisProps> = ({ patientId }) => {
                 <span className="text-white text-xs font-bold">{storedAnalyses.length}</span>
               </div>
             </div>
-            <div>
+            <div className='pl-2'>
               <h2 className="text-3xl font-bold text-gray-900 tracking-tight">DNA Analysis</h2>
               <p className="text-gray-600 font-medium">
                 {storedAnalyses.length > 0
@@ -428,7 +428,7 @@ export const DNAAnalysis: React.FC<DNAAnalysisProps> = ({ patientId }) => {
               <Upload className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">Upload VCF File</h3>
+              <h3 className="text-2xl font-bold text-gray-900 text-left">Upload VCF File</h3>
               <p className="text-gray-600 font-medium">Select analysis databases and upload your genetic data</p>
             </div>
           </div>

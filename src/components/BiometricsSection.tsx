@@ -137,7 +137,7 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
               </div>
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Biometrics</h2>
+              <h2 className="text-3xl font-bold text-gray-900 tracking-tight text-left">Biometrics</h2>
               <p className="text-gray-600 font-medium">Loading comprehensive health metrics...</p>
             </div>
           </div>
@@ -175,7 +175,7 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
               </div>
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Biometrics</h2>
+              <h2 className="text-3xl font-bold text-gray-900 tracking-tight text-left">Biometrics</h2>
               <p className="text-gray-600 font-medium">Comprehensive health metrics tracking</p>
             </div>
           </div>
@@ -221,7 +221,7 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
               </div>
             </div>
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Biometrics</h2>
+              <h2 className="text-3xl font-bold text-gray-900 tracking-tight text-left">Biometrics</h2>
               <p className="text-gray-600 font-medium">Comprehensive health metrics tracking</p>
             </div>
           </div>
@@ -276,8 +276,8 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
                 <span className="text-white text-xs font-bold">{new Set(biometrics.map(b => b.timepoint)).size}</span>
               </div>
             </div>
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Biometrics</h2>
+            <div className='pl-2'>
+              <h2 className="text-3xl font-bold text-gray-900 tracking-tight text-left">Biometrics</h2>
               <p className="text-gray-600 font-medium">
                 {biometrics.length} data points across {new Set(biometrics.map(b => b.timepoint)).size} timepoints
               </p>
@@ -298,7 +298,7 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
               ) : (
                 <>
                   <FileText className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-                  <span className="font-semibold">AI Report</span>
+                  <span className="font-semibold">Report</span>
                 </>
               )}
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400/20 to-indigo-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>

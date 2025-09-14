@@ -364,7 +364,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                         <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
                           {patient.first_name} {patient.last_name}
                         </h2>
-                        <p className="text-gray-600 font-medium">Patient ID: {patient.medical_record_number}</p>
+                        <p className="text-gray-600 font-medium pl-2">Patient ID: {patient.medical_record_number}</p>
                         <div className="flex items-center space-x-2 mt-2">
                           <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
                             Active Patient
@@ -693,8 +693,8 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                           <span className="text-white text-xs font-bold">{soapNotes.length}</span>
                         </div>
                       </div>
-                      <div>
-                        <h2 className="text-3xl font-bold text-gray-900 tracking-tight">SOAP Notes</h2>
+                      <div className='pl-2'>
+                        <h2 className="text-3xl font-bold text-gray-900 tracking-tight text-left">SOAP Notes</h2>
                         <p className="text-gray-600 font-medium">
                           {soapNotes.length > 0 
                             ? `${soapNotes.length} clinical ${soapNotes.length === 1 ? 'note' : 'notes'} documented`
@@ -925,9 +925,9 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                           <span className="text-white text-xs font-bold">{medicalScans.length}</span>
                         </div>
                       </div>
-                      <div>
+                      <div className='pl-2'>
                         <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Medical Scans</h2>
-                        <p className="text-gray-600 font-medium">
+                        <p className="text-gray-600 font-medium text-left">
                           {medicalScans.length > 0 
                             ? `${medicalScans.length} ${medicalScans.length === 1 ? 'scan' : 'scans'} on file`
                             : 'No scans uploaded yet'
@@ -985,7 +985,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                 </div>
                               </div>
-                              <div>
+                              <div className='text-left'>
                                 <h4 className="text-2xl font-bold text-gray-900 capitalize mb-1">
                                   {scan.scan_type} Scan
                                 </h4>

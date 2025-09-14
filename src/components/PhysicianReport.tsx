@@ -80,12 +80,15 @@ export const PhysicianReport: React.FC<PhysicianReportProps> = ({ report, onClos
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      style={{ margin: 0, padding: '1rem' }}
+    >
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Physician Biometrics Report</h2>
+              <h2 className="text-2xl font-bold text-gray-900 text-left">Physician Biometrics Report</h2>
               <p className="text-sm text-gray-500 mt-1">
                 Generated on {new Date(report.generatedDate).toLocaleDateString()} • Patient ID: {report.patientId}
               </p>
