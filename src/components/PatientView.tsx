@@ -651,63 +651,229 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
             )}
 
             {activeSection === 'notes' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900">SOAP Notes</h2>
-                  <button
-                    onClick={handleNewSOAPNote}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>New SOAP Note</span>
-                  </button>
+              <div className="space-y-8">
+                {/* Header Section */}
+                <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-3xl p-8 border border-gray-200/50 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-3xl shadow-lg">
+                          <FileText className="h-8 w-8 text-white" />
+                        </div>
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-500 w-6 h-6 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">{soapNotes.length}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-bold text-gray-900 tracking-tight">SOAP Notes</h2>
+                        <p className="text-gray-600 font-medium">
+                          {soapNotes.length > 0 
+                            ? `${soapNotes.length} clinical ${soapNotes.length === 1 ? 'note' : 'notes'} documented`
+                            : 'No clinical notes yet'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleNewSOAPNote}
+                      className="group relative flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    >
+                      <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+                      <span className="font-semibold">New SOAP Note</span>
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/20 to-indigo-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </button>
+                  </div>
                 </div>
                 
-                <div className="space-y-4">
+                {/* SOAP Notes List */}
+                <div className="space-y-6">
                   {soapNotes.length > 0 ? (
                     soapNotes.map((note) => (
-                      <div key={note.id} className="bg-white border rounded-lg p-6 shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="font-semibold text-lg">
-                            {format(new Date(note.created_at), 'MMM dd, yyyy - HH:mm')}
-                          </h4>
-                          <span className={`px-3 py-1 text-sm rounded-full ${
-                            note.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            note.status === 'reviewed' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {note.status}
-                          </span>
+                      <div key={note.id} className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+                        {/* Note Header */}
+                        <div className="flex items-center justify-between mb-8">
+                          <div className="flex items-center space-x-4">
+                            <div className="relative">
+                              <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-2xl shadow-lg">
+                                <FileText className="h-6 w-6 text-white" />
+                              </div>
+                              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 border-2 border-white rounded-full"></div>
+                            </div>
+                            <div>
+                              <h4 className="text-2xl font-bold text-gray-900">
+                                {format(new Date(note.created_at), 'MMMM dd, yyyy')}
+                              </h4>
+                              <p className="text-gray-600 font-medium">
+                                {format(new Date(note.created_at), 'h:mm a')} • 
+                                {note.type_of_visit && ` ${note.type_of_visit} • `}
+                                Dr. {note.updated_by || 'Clinical Team'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <span className={`px-4 py-2 text-sm font-semibold rounded-2xl shadow-sm ${
+                              note.status === 'completed' ? 'bg-green-100 text-green-800 border border-green-200' :
+                              note.status === 'reviewed' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                              'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                            }`}>
+                              {note.status.charAt(0).toUpperCase() + note.status.slice(1)}
+                            </span>
+                            {note.ai_generated_content && (
+                              <div className="flex items-center space-x-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">
+                                <Brain className="h-3 w-3" />
+                                <span>AI Assisted</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          <div>
-                            <h5 className="font-medium text-gray-600 mb-2">Subjective</h5>
-                            <p className="text-gray-800">{note.subjective || 'Not recorded'}</p>
+
+                        {/* Chief Complaint & Visit Info */}
+                        {(note.chief_complaint || note.type_of_visit) && (
+                          <div className="mb-8 p-6 bg-gradient-to-r from-blue-50/50 to-purple-50/50 rounded-2xl border border-blue-100/50">
+                            {note.chief_complaint && (
+                              <div className="mb-4">
+                                <h6 className="text-sm font-bold text-blue-800 mb-2 uppercase tracking-wide">Chief Complaint</h6>
+                                <p className="text-blue-900 text-lg font-medium">{note.chief_complaint}</p>
+                              </div>
+                            )}
+                            {note.type_of_visit && (
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-medium text-blue-700">Visit Type:</span>
+                                <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded-lg text-sm font-semibold">
+                                  {note.type_of_visit}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                          <div>
-                            <h5 className="font-medium text-gray-600 mb-2">Objective</h5>
-                            <p className="text-gray-800">{note.objective || 'Not recorded'}</p>
+                        )}
+
+                        {/* SOAP Sections */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                          <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/50 rounded-2xl p-6 border border-green-100/50">
+                            <div className="flex items-center space-x-3 mb-4">
+                              <div className="bg-green-100 p-2 rounded-xl">
+                                <User className="h-5 w-5 text-green-600" />
+                              </div>
+                              <h5 className="text-xl font-bold text-green-800">Subjective</h5>
+                            </div>
+                            <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-green-100">
+                              <p className="text-gray-800 leading-relaxed">
+                                {note.subjective || (
+                                  <span className="text-gray-500 italic">No subjective information recorded</span>
+                                )}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h5 className="font-medium text-gray-600 mb-2">Assessment</h5>
-                            <p className="text-gray-800">{note.assessment || 'Not recorded'}</p>
+
+                          <div className="bg-gradient-to-br from-blue-50/50 to-cyan-50/50 rounded-2xl p-6 border border-blue-100/50">
+                            <div className="flex items-center space-x-3 mb-4">
+                              <div className="bg-blue-100 p-2 rounded-xl">
+                                <Activity className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <h5 className="text-xl font-bold text-blue-800">Objective</h5>
+                            </div>
+                            <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-blue-100">
+                              <p className="text-gray-800 leading-relaxed">
+                                {note.objective || (
+                                  <span className="text-gray-500 italic">No objective findings recorded</span>
+                                )}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h5 className="font-medium text-gray-600 mb-2">Plan</h5>
-                            <p className="text-gray-800">{note.plan || 'Not recorded'}</p>
+
+                          <div className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 rounded-2xl p-6 border border-purple-100/50">
+                            <div className="flex items-center space-x-3 mb-4">
+                              <div className="bg-purple-100 p-2 rounded-xl">
+                                <Brain className="h-5 w-5 text-purple-600" />
+                              </div>
+                              <h5 className="text-xl font-bold text-purple-800">Assessment</h5>
+                            </div>
+                            <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-purple-100">
+                              <p className="text-gray-800 leading-relaxed">
+                                {note.assessment || (
+                                  <span className="text-gray-500 italic">No assessment documented</span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="bg-gradient-to-br from-orange-50/50 to-amber-50/50 rounded-2xl p-6 border border-orange-100/50">
+                            <div className="flex items-center space-x-3 mb-4">
+                              <div className="bg-orange-100 p-2 rounded-xl">
+                                <FileText className="h-5 w-5 text-orange-600" />
+                              </div>
+                              <h5 className="text-xl font-bold text-orange-800">Plan</h5>
+                            </div>
+                            <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-orange-100">
+                              <p className="text-gray-800 leading-relaxed">
+                                {note.plan || (
+                                  <span className="text-gray-500 italic">No treatment plan specified</span>
+                                )}
+                              </p>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Additional Information */}
+                        {(note.diagnosis_for_visit?.length || note.services?.length || note.next_visit) && (
+                          <div className="mt-8 pt-6 border-t border-gray-200">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                              {note.diagnosis_for_visit && note.diagnosis_for_visit.length > 0 && (
+                                <div className="bg-red-50/50 rounded-xl p-4 border border-red-100">
+                                  <h6 className="text-sm font-bold text-red-800 mb-3 uppercase tracking-wide">Diagnoses</h6>
+                                  <div className="space-y-2">
+                                    {note.diagnosis_for_visit.map((diagnosis, idx) => (
+                                      <div key={idx} className="bg-red-100/70 text-red-800 px-3 py-2 rounded-lg text-sm font-medium">
+                                        {diagnosis}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {note.services && note.services.length > 0 && (
+                                <div className="bg-teal-50/50 rounded-xl p-4 border border-teal-100">
+                                  <h6 className="text-sm font-bold text-teal-800 mb-3 uppercase tracking-wide">Services</h6>
+                                  <div className="space-y-2">
+                                    {note.services.map((service, idx) => (
+                                      <div key={idx} className="bg-teal-100/70 text-teal-800 px-3 py-2 rounded-lg text-sm font-medium">
+                                        {service}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {note.next_visit && (
+                                <div className="bg-indigo-50/50 rounded-xl p-4 border border-indigo-100">
+                                  <h6 className="text-sm font-bold text-indigo-800 mb-3 uppercase tracking-wide">Follow-up</h6>
+                                  <div className="bg-indigo-100/70 text-indigo-800 px-3 py-2 rounded-lg text-sm font-medium">
+                                    {note.next_visit}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (
-                    <div className="bg-white border rounded-lg p-12 text-center">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500 text-lg mb-4">No SOAP notes found for this patient.</p>
+                    <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-16 border border-gray-200/50 text-center shadow-xl">
+                      <div className="relative mb-8">
+                        <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl mx-auto flex items-center justify-center">
+                          <FileText className="h-12 w-12 text-gray-400" />
+                        </div>
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-600 w-8 h-8 rounded-full flex items-center justify-center mx-auto">
+                          <Plus className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                      <h4 className="text-2xl font-bold text-gray-900 mb-4">No SOAP Notes Yet</h4>
+                      <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">
+                        Start documenting patient visits by creating your first SOAP note. Use voice recording for fast, efficient documentation.
+                      </p>
                       <button
                         onClick={handleNewSOAPNote}
-                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mx-auto"
+                        className="group inline-flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-lg"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
                         <span>Create First SOAP Note</span>
                       </button>
                     </div>
