@@ -777,94 +777,165 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-7xl h-full max-h-[95vh] rounded-lg shadow-xl overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white/95 backdrop-blur-xl w-full max-w-7xl h-full max-h-[95vh] rounded-3xl shadow-2xl overflow-hidden border border-gray-200/50">
         <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="bg-blue-600 text-white p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <FileText className="h-6 w-6" />
-                <div>
-                  <h2 className="text-xl font-bold">
-                    SOAP Note (Internal Medicine Physician)
-                  </h2>
-                  <div className="flex items-center space-x-3">
-                    <div>
-                      <p className="text-blue-100">
-                        {currentPatient.first_name} {currentPatient.last_name} (#{currentPatient.medical_record_number})
-                        <br />
-                        {new Date().getFullYear() - new Date(currentPatient.date_of_birth).getFullYear()}yrs {currentPatient.gender}, 
-                        DOB: {format(new Date(currentPatient.date_of_birth), 'MM-dd-yyyy')}
-                      </p>
+          {/* Modern Header */}
+          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white p-8 relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20"></div>
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-4 left-4 w-4 h-4 border-2 border-white/30 rotate-45"></div>
+              <div className="absolute top-12 left-16 w-2 h-2 bg-white/20 rounded-full"></div>
+              <div className="absolute top-8 right-20 w-3 h-3 border border-white/30 rounded"></div>
+              <div className="absolute bottom-8 right-8 w-4 h-4 border-2 border-white/30 rotate-45"></div>
+              <div className="absolute bottom-4 left-12 w-2 h-2 bg-white/20 rounded-full"></div>
+            </div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-6">
+                  <div className="relative">
+                    <div className="bg-white/20 backdrop-blur-sm p-4 rounded-3xl shadow-xl">
+                      <FileText className="h-10 w-10 text-white" />
                     </div>
-                    <button
-                      onClick={() => setShowPatientEditModal(true)}
-                      className="flex items-center space-x-1 px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-400 text-sm"
-                      title="Edit Patient Medical Info"
-                    >
-                      <Edit className="h-3 w-3" />
-                      <span>Edit Patient</span>
-                    </button>
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-400 to-emerald-500 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h2 className="text-3xl font-bold mb-2 tracking-tight">
+                      Clinical Documentation
+                    </h2>
+                    <div className="flex items-center space-x-6">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                        <div className="flex items-center space-x-4">
+                          <div className="relative">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                              <User className="h-6 w-6 text-white" />
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-white">
+                              {currentPatient.first_name} {currentPatient.last_name}
+                            </h3>
+                            <div className="flex items-center space-x-4 text-blue-100">
+                              <span className="font-medium">MRN: #{currentPatient.medical_record_number}</span>
+                              <span>•</span>
+                              <span>{new Date().getFullYear() - new Date(currentPatient.date_of_birth).getFullYear()} years</span>
+                              <span>•</span>
+                              <span className="capitalize">{currentPatient.gender}</span>
+                              <span>•</span>
+                              <span>DOB: {format(new Date(currentPatient.date_of_birth), 'MM/dd/yyyy')}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => setShowPatientEditModal(true)}
+                        className="group flex items-center space-x-2 px-4 py-2.5 bg-white/20 backdrop-blur-sm text-white rounded-2xl hover:bg-white/30 border border-white/30 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        title="Edit Patient Medical Info"
+                      >
+                        <Edit className="h-4 w-4 group-hover:rotate-12 transition-transform" />
+                        <span className="font-medium">Edit Patient</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={handleSave}
-                  disabled={loading}
-                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                >
-                  <Save className="h-4 w-4" />
-                  <span>{loading ? 'Saving...' : 'Save'}</span>
-                </button>
-                <button
-                  onClick={onClose}
-                  className="text-white hover:text-gray-200 text-xl font-bold p-2"
-                >
-                  ×
-                </button>
+                
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="group relative flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span className="font-semibold">Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-5 w-5 group-hover:animate-pulse" />
+                        <span className="font-semibold">Save SOAP Note</span>
+                      </>
+                    )}
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-400/20 to-emerald-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  </button>
+                  
+                  <button
+                    onClick={onClose}
+                    className="group p-3 text-white/80 hover:text-white hover:bg-white/20 rounded-2xl transition-all duration-200"
+                    title="Close"
+                  >
+                    <X className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="border-b bg-gray-50">
-            <div className="p-2">
-              <div className="flex items-center space-x-4 mb-2">
-                <span className="text-sm font-semibold text-gray-700">Primary Workflow:</span>
-                <div className="flex space-x-1">
+          {/* Modern Tab Navigation */}
+          <div className="bg-gradient-to-r from-gray-50 via-blue-50/30 to-purple-50/30 border-b border-gray-200/50">
+            <div className="p-6">
+              {/* Primary Workflow Section */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-xl shadow-lg">
+                      <Brain className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900">AI-Powered Workflow</h3>
+                  </div>
+                  <div className="h-px bg-gradient-to-r from-blue-200 to-purple-200 flex-1"></div>
+                </div>
+                <div className="flex space-x-3">
                   {tabs.filter(tab => tab.primary).map(({ id, label, icon: Icon }) => (
                     <button
                       key={id}
                       onClick={() => setActiveTab(id)}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap border-2 ${
+                      className={`group relative flex items-center space-x-3 px-6 py-3 rounded-2xl font-semibold text-sm whitespace-nowrap transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
                         activeTab === id
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'text-blue-600 border-blue-600 hover:bg-blue-50'
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                          : 'bg-white text-gray-700 hover:text-blue-600 border border-gray-200/50 hover:border-blue-300'
                       }`}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className={`h-5 w-5 ${activeTab === id ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
                       <span>{label}</span>
+                      {activeTab === id && (
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/20 to-purple-400/20 animate-pulse"></div>
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-gray-600">Additional Fields:</span>
-                <nav className="flex space-x-1 overflow-x-auto">
+              {/* Additional Fields Section */}
+              <div>
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-gradient-to-r from-gray-500 to-gray-600 p-2 rounded-xl shadow-lg">
+                      <FileText className="h-4 w-4 text-white" />
+                    </div>
+                    <h4 className="text-md font-semibold text-gray-700">Clinical Documentation</h4>
+                  </div>
+                  <div className="h-px bg-gradient-to-r from-gray-200 to-gray-300 flex-1"></div>
+                </div>
+                <nav className="flex space-x-2 overflow-x-auto scrollbar-hide">
                   {tabs.filter(tab => !tab.primary).map(({ id, label, icon: Icon }) => (
                     <button
                       key={id}
                       onClick={() => setActiveTab(id)}
-                      className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg font-medium text-sm whitespace-nowrap ${
+                      className={`group flex items-center space-x-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-200 shadow-sm hover:shadow-md ${
                         activeTab === id
-                          ? 'bg-gray-600 text-white'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                          ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-white transform scale-105'
+                          : 'bg-white/80 backdrop-blur-sm text-gray-600 hover:text-gray-900 hover:bg-white border border-gray-200/50 hover:border-gray-300'
                       }`}
                     >
-                      <Icon className="h-3 w-3" />
+                      <Icon className={`h-4 w-4 ${activeTab === id ? '' : 'group-hover:scale-110 transition-transform'}`} />
                       <span>{label}</span>
                     </button>
                   ))}
@@ -874,7 +945,7 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/20 to-purple-50/20 p-8">
             {renderTabContent()}
           </div>
         </div>
