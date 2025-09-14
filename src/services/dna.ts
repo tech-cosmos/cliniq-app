@@ -1,4 +1,5 @@
 // DNA Analysis Service for integrating with the Genetic Matching API
+import dnaStorageService from './dnaStorage';
 
 const DNA_API_BASE_URL = 'http://localhost:8000';
 
@@ -102,6 +103,8 @@ class DNAAnalysisService {
     const databases = request.databases || ['diseases', 'allergies', 'drug_interactions'];
     formData.append('databases', databases.join(','));
 
+    const startTime = Date.now();
+
     try {
       const response = await fetch(`${DNA_API_BASE_URL}/analyze-genetics`, {
         method: 'POST',
@@ -115,7 +118,26 @@ class DNAAnalysisService {
         throw new Error(errorData.detail || `Analysis failed: ${response.statusText}`);
       }
 
-      return response.json();
+      const analysisResults: DNAAnalysisResults = await response.json();
+      const analysisDuration = Math.round((Date.now() - startTime) / 1000);
+
+      // Save the analysis results to the database
+      try {
+        await dnaStorageService.saveDNAAnalysis(
+          request.patientId,
+          request.file.name,
+          request.file.size,
+          databases,
+          analysisResults,
+          analysisDuration
+        );
+        console.log('DNA analysis results saved successfully');
+      } catch (storageError) {
+        console.error('Failed to save DNA analysis results:', storageError);
+        // Don't throw here - we want to return the results even if storage fails
+      }
+
+      return analysisResults;
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
