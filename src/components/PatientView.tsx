@@ -883,102 +883,233 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
             )}
 
             {activeSection === 'scans' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900">Medical Scans</h2>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={handleRefresh}
-                      disabled={refreshing}
-                      className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-lg disabled:opacity-50 ${
-                        pollingInterval 
-                          ? 'bg-green-600 hover:bg-green-700 text-white' 
-                          : 'bg-gray-600 hover:bg-gray-700 text-white'
-                      }`}
-                    >
-                      <RefreshCw className={`h-4 w-4 ${refreshing || pollingInterval ? 'animate-spin' : ''}`} />
-                      <span>
-                        {refreshing ? 'Refreshing...' : pollingInterval ? 'Auto-refresh ON' : 'Refresh'}
-                      </span>
-                    </button>
-                    <button
-                      onClick={handleUploadScan}
-                      className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Upload Scan</span>
-                    </button>
+              <div className="space-y-8">
+                {/* Header Section */}
+                <div className="bg-gradient-to-br from-green-50 via-white to-blue-50 rounded-3xl p-8 border border-gray-200/50 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="relative">
+                        <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-4 rounded-3xl shadow-lg">
+                          <Image className="h-8 w-8 text-white" />
+                        </div>
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-cyan-500 w-6 h-6 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">{medicalScans.length}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Medical Scans</h2>
+                        <p className="text-gray-600 font-medium">
+                          {medicalScans.length > 0 
+                            ? `${medicalScans.length} ${medicalScans.length === 1 ? 'scan' : 'scans'} on file`
+                            : 'No scans uploaded yet'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <button
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                        className={`group flex items-center space-x-2 px-4 py-2.5 text-sm rounded-2xl font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 ${
+                          pollingInterval 
+                            ? 'bg-green-600 hover:bg-green-700 text-white' 
+                            : 'bg-gray-600 hover:bg-gray-700 text-white'
+                        }`}
+                      >
+                        <RefreshCw className={`h-4 w-4 ${refreshing || pollingInterval ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+                        <span>
+                          {refreshing ? 'Refreshing...' : pollingInterval ? 'Auto-refresh ON' : 'Refresh'}
+                        </span>
+                      </button>
+                      <button
+                        onClick={handleUploadScan}
+                        className="group relative flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      >
+                        <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+                        <span className="font-semibold">Upload Scan</span>
+                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-400/20 to-emerald-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="space-y-4">
+                {/* Scans Grid */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                   {medicalScans.length > 0 ? (
                     medicalScans.map((scan) => (
-                      <div key={scan.id} className="bg-white border rounded-lg p-6 shadow-sm">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h4 className="font-semibold text-lg capitalize">{scan.scan_type} Scan</h4>
-                            <p className="text-gray-500">{scan.file_name}</p>
-                          </div>
-                          <div className="text-right">
-                            <span className={`px-3 py-1 text-sm rounded-full ${
-                              scan.urgency_level === 'critical' ? 'bg-red-100 text-red-800' :
-                              scan.urgency_level === 'high' ? 'bg-orange-100 text-orange-800' :
-                              scan.urgency_level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {scan.urgency_level} priority
-                            </span>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {format(new Date(scan.created_at), 'MMM dd, yyyy')}
-                            </p>
-                          </div>
-                        </div>
-                        {scan.ai_analysis ? (
-                          <div className="bg-gray-50 p-4 rounded-lg mt-4">
-                            <h5 className="font-medium text-gray-700 mb-3">AI Analysis</h5>
-                            <p className="text-gray-800 mb-3">{scan.ai_analysis}</p>
-                            {scan.ai_findings && scan.ai_findings.length > 0 && (
+                      <div key={scan.id} className="bg-white/80 backdrop-blur-sm rounded-3xl border border-gray-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden">
+                        <div className="p-8">
+                          {/* Scan Header */}
+                          <div className="flex items-start justify-between mb-6">
+                            <div className="flex items-start space-x-4">
+                              <div className="relative">
+                                <div className={`p-3 rounded-2xl shadow-lg ${
+                                  scan.scan_type === 'xray' ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+                                  scan.scan_type === 'mri' ? 'bg-gradient-to-r from-purple-500 to-pink-500' :
+                                  scan.scan_type === 'ct' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                                  scan.scan_type === 'ultrasound' ? 'bg-gradient-to-r from-orange-500 to-red-500' :
+                                  'bg-gradient-to-r from-gray-500 to-gray-600'
+                                }`}>
+                                  <Image className="h-6 w-6 text-white" />
+                                </div>
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                </div>
+                              </div>
                               <div>
-                                <h6 className="font-medium text-gray-600 mb-2">Key Findings:</h6>
-                                <ul className="text-gray-700 list-disc list-inside space-y-1">
-                                  {scan.ai_findings.map((finding, index) => (
-                                    <li key={index}>{finding}</li>
-                                  ))}
-                                </ul>
+                                <h4 className="text-2xl font-bold text-gray-900 capitalize mb-1">
+                                  {scan.scan_type} Scan
+                                </h4>
+                                <p className="text-gray-600 font-medium">{scan.file_name}</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  Uploaded {format(new Date(scan.created_at), 'MMM dd, yyyy')} at {format(new Date(scan.created_at), 'h:mm a')}
+                                </p>
                               </div>
-                            )}
+                            </div>
+                            <div className="flex flex-col items-end space-y-3">
+                              <span className={`px-4 py-2 text-sm font-semibold rounded-2xl shadow-sm ${
+                                scan.urgency_level === 'critical' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                scan.urgency_level === 'high' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                                scan.urgency_level === 'medium' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                'bg-green-100 text-green-800 border border-green-200'
+                              }`}>
+                                {scan.urgency_level.charAt(0).toUpperCase() + scan.urgency_level.slice(1)} Priority
+                              </span>
+                            </div>
                           </div>
-                        ) : (
-                          <div className="bg-purple-50 p-4 rounded-lg mt-4 border border-purple-200">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
-                                <h5 className="font-medium text-purple-700">AI Analysis in Progress</h5>
+
+                          {/* Image Preview */}
+                          <div className="mb-6">
+                            <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-4 border border-gray-200">
+                              <div className="aspect-video bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl overflow-hidden relative group/image">
+                                <img 
+                                  src={scan.file_path} 
+                                  alt={`${scan.scan_type} scan`}
+                                  className="w-full h-full object-contain bg-black/5 group-hover/image:scale-105 transition-transform duration-300"
+                                  onError={(e) => {
+                                    // Fallback for broken images
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = `
+                                        <div class="w-full h-full flex items-center justify-center">
+                                          <div class="text-center">
+                                            <div class="w-16 h-16 bg-gray-400/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                              </svg>
+                                            </div>
+                                            <p class="text-gray-500 font-medium">${scan.scan_type.toUpperCase()} Scan</p>
+                                            <p class="text-gray-400 text-sm">Image preview not available</p>
+                                          </div>
+                                        </div>
+                                      `;
+                                    }
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                                <div className="absolute bottom-4 left-4 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300">
+                                  <span className="bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                                    Click to view full size
+                                  </span>
+                                </div>
                               </div>
-                              {pollingInterval && (
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                  <span className="text-sm text-green-600">Auto-refreshing</span>
+                            </div>
+                          </div>
+
+                          {/* AI Analysis or Progress */}
+                          {scan.ai_analysis ? (
+                            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 border border-purple-200/50">
+                              <div className="flex items-center space-x-3 mb-4">
+                                <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-2 rounded-xl shadow-lg">
+                                  <Brain className="h-5 w-5 text-white" />
+                                </div>
+                                <h5 className="text-xl font-bold text-purple-900">AI Analysis Results</h5>
+                              </div>
+                              <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-purple-100 mb-4">
+                                <p className="text-gray-800 leading-relaxed">{scan.ai_analysis}</p>
+                              </div>
+                              {scan.ai_findings && scan.ai_findings.length > 0 && (
+                                <div>
+                                  <h6 className="text-lg font-semibold text-purple-800 mb-3">Key Findings</h6>
+                                  <div className="space-y-2">
+                                    {scan.ai_findings.map((finding, index) => (
+                                      <div key={index} className="bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-purple-100">
+                                        <div className="flex items-start space-x-3">
+                                          <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
+                                          <span className="text-gray-800 font-medium">{finding}</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </div>
-                            <p className="text-sm text-purple-600 mt-2">
-                              This scan is being analyzed by our AI system. Results will appear automatically when ready.
-                            </p>
-                          </div>
-                        )}
+                          ) : (
+                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200/50">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center space-x-3">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-purple-200 border-t-purple-600"></div>
+                                  <h5 className="text-xl font-bold text-purple-800">AI Analysis in Progress</h5>
+                                </div>
+                                {pollingInterval && (
+                                  <div className="flex items-center space-x-2 bg-green-100 px-3 py-1 rounded-full">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                    <span className="text-sm text-green-700 font-medium">Auto-refreshing</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-purple-100">
+                                <p className="text-purple-700 leading-relaxed">
+                                  Our advanced AI system is analyzing this {scan.scan_type} scan. This process typically takes 2-5 minutes. 
+                                  Results will appear automatically when ready.
+                                </p>
+                                <div className="flex items-center justify-center space-x-2 mt-4">
+                                  <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"></div>
+                                  <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                  <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Radiologist Notes */}
+                          {scan.radiologist_notes && (
+                            <div className="mt-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200/50">
+                              <div className="flex items-center space-x-3 mb-4">
+                                <div className="bg-gradient-to-r from-blue-500 to-cyan-600 p-2 rounded-xl shadow-lg">
+                                  <User className="h-5 w-5 text-white" />
+                                </div>
+                                <h5 className="text-xl font-bold text-blue-900">Radiologist Notes</h5>
+                              </div>
+                              <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 border border-blue-100">
+                                <p className="text-gray-800 leading-relaxed">{scan.radiologist_notes}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))
                   ) : (
-                    <div className="bg-white border rounded-lg p-12 text-center">
-                      <Image className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500 text-lg mb-4">No medical scans found for this patient.</p>
+                    <div className="col-span-full bg-white/60 backdrop-blur-sm rounded-3xl p-16 border border-gray-200/50 text-center shadow-xl">
+                      <div className="relative mb-8">
+                        <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 rounded-3xl mx-auto flex items-center justify-center">
+                          <Image className="h-12 w-12 text-gray-400" />
+                        </div>
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-600 w-8 h-8 rounded-full flex items-center justify-center mx-auto">
+                          <Plus className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                      <h4 className="text-2xl font-bold text-gray-900 mb-4">No Medical Scans Yet</h4>
+                      <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto">
+                        Upload medical scans like X-rays, MRIs, CT scans, or ultrasounds to get AI-powered analysis and insights.
+                      </p>
                       <button
                         onClick={handleUploadScan}
-                        className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 mx-auto"
+                        className="group inline-flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-lg"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
                         <span>Upload First Scan</span>
                       </button>
                     </div>
