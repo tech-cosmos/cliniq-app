@@ -1214,27 +1214,88 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
       )}
 
       {showDiagnosticAssistant && patient && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-4xl h-full max-h-[90vh] rounded-lg shadow-xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-bold">
-                AI Assistant - {patient.first_name} {patient.last_name}
-              </h2>
-              <button
-                onClick={() => setShowDiagnosticAssistant(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="h-full overflow-y-auto">
-              <DiagnosticAssistant
-                patient={patient}
-                currentSOAP={currentSOAP || undefined}
-                onSuggestionSelect={(suggestion) => {
-                  console.log('Selected suggestion:', suggestion);
-                }}
-              />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/95 backdrop-blur-xl w-full max-w-6xl h-full max-h-[95vh] rounded-3xl shadow-2xl overflow-hidden border border-gray-200/50">
+            <div className="flex flex-col h-full">
+              {/* Modern Header */}
+              <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white p-8 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-blue-400/20"></div>
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-4 left-4 w-4 h-4 border-2 border-white/30 rotate-45"></div>
+                  <div className="absolute top-12 left-16 w-2 h-2 bg-white/20 rounded-full"></div>
+                  <div className="absolute top-8 right-20 w-3 h-3 border border-white/30 rounded"></div>
+                  <div className="absolute bottom-8 right-8 w-4 h-4 border-2 border-white/30 rotate-45"></div>
+                  <div className="absolute bottom-4 left-12 w-2 h-2 bg-white/20 rounded-full"></div>
+                </div>
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-6">
+                      <div className="relative">
+                        <div className="bg-white/20 backdrop-blur-sm p-4 rounded-3xl shadow-xl">
+                          <Brain className="h-10 w-10 text-white" />
+                        </div>
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-emerald-400 to-green-500 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h2 className="text-3xl font-bold mb-2 tracking-tight">
+                          AI Clinical Assistant
+                        </h2>
+                        <div className="flex items-center space-x-6">
+                          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                            <div className="flex items-center space-x-4">
+                              <div className="relative">
+                                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                  <User className="h-6 w-6 text-white" />
+                                </div>
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-bold text-white">
+                                  {patient.first_name} {patient.last_name}
+                                </h3>
+                                <div className="flex items-center space-x-4 text-purple-100">
+                                  <span className="font-medium">MRN: #{patient.medical_record_number}</span>
+                                  <span>•</span>
+                                  <span>{new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()} years</span>
+                                  <span>•</span>
+                                  <span className="capitalize">{patient.gender}</span>
+                                  <span>•</span>
+                                  <span>DOB: {format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => setShowDiagnosticAssistant(false)}
+                      className="group p-3 text-white/80 hover:text-white hover:bg-white/20 rounded-2xl transition-all duration-200"
+                      title="Close"
+                    >
+                      <X className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-purple-50/20 to-blue-50/20">
+                <DiagnosticAssistant
+                  patient={patient}
+                  currentSOAP={currentSOAP || undefined}
+                  recentScans={medicalScans.slice(0, 5)}
+                  onSuggestionSelect={(suggestion) => {
+                    console.log('Selected suggestion:', suggestion);
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
