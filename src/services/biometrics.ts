@@ -100,8 +100,8 @@ class BiometricsService {
       patientReported: {
         title: 'Patient-Reported',
         metrics: {
-          quality_of_life: { label: 'QoL', unit: '(0-100)', color: '#EC4899' },
-          fatigue_score: { label: 'Fatigue', unit: '(0-10)', color: '#EF4444' }
+          quality_of_life: { label: 'QoL', unit: '', color: '#EC4899' },
+          fatigue_score: { label: 'Fatigue', unit: '', color: '#EF4444' }
         }
       }
     };
@@ -126,6 +126,9 @@ class BiometricsService {
         const metric = category.metrics[metricKey as keyof typeof category.metrics];
         if (metricKey === 'quality_of_life') {
           return `${Math.round(value)}`;
+        }
+        if (metricKey === 'gait_speed') {
+          return value.toFixed(2);
         }
         return value.toFixed(1);
       }
