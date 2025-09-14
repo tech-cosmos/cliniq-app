@@ -7,10 +7,11 @@ import { ScanUploader } from './ScanUploader';
 import { DiagnosticAssistant } from './DiagnosticAssistant';
 import { BiometricsSection } from './BiometricsSection';
 import { BasicPatientEditor } from './BasicPatientEditor';
+import { DNAAnalysis } from './DNAAnalysis';
 import PatientService from '../services/patient';
 import {
   User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText,
-  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, TrendingUp, Edit3
+  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, TrendingUp, Edit3, Activity
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -18,7 +19,7 @@ interface PatientViewProps {
   doctorId: string;
 }
 
-type DrawerSection = 'overview' | 'notes' | 'scans' | 'biometrics';
+type DrawerSection = 'overview' | 'notes' | 'scans' | 'dna' | 'biometrics';
 
 export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
   const { patientId } = useParams<{ patientId: string }>();
@@ -190,6 +191,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
     { id: 'overview', label: 'Overview', icon: User, count: null },
     { id: 'notes', label: 'SOAP Notes', icon: FileText, count: soapNotes.length },
     { id: 'scans', label: 'Medical Scans', icon: Image, count: medicalScans.length },
+    { id: 'dna', label: 'DNA Analysis', icon: Activity, count: null },
     { id: 'biometrics', label: 'Biometrics', icon: TrendingUp, count: null },
   ];
 
@@ -628,6 +630,10 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                   )}
                 </div>
               </div>
+            )}
+
+            {activeSection === 'dna' && (
+              <DNAAnalysis patientId={patient.id} />
             )}
 
             {activeSection === 'biometrics' && (
