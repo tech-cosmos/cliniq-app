@@ -14,6 +14,7 @@ interface ComprehensiveSOAPNoteEditorProps {
   onClose: () => void;
   doctorId: string;
   onPatientUpdated?: (updatedPatient: Patient) => void;
+  readonly?: boolean;
 }
 
 export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorProps> = ({
@@ -22,7 +23,8 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
   onSave,
   onClose,
   doctorId,
-  onPatientUpdated
+  onPatientUpdated,
+  readonly = false
 }) => {
   const [currentPatient, setCurrentPatient] = useState<Patient>(patient);
   const [formData, setFormData] = useState<Partial<SOAPNote>>({
@@ -887,7 +889,7 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
                   
                   <div>
                     <h2 className="text-3xl font-bold mb-2 tracking-tight">
-                      Clinical Documentation
+                      {readonly ? 'Clinical Documentation - View' : 'Clinical Documentation'}
                     </h2>
                     <div className="flex items-center space-x-6">
                       <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
@@ -928,24 +930,26 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
                 </div>
                 
                 <div className="flex items-center space-x-4">
-                  <button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="group relative flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        <span className="font-semibold">Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-5 w-5 group-hover:animate-pulse" />
-                        <span className="font-semibold">Save SOAP Note</span>
-                      </>
-                    )}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-400/20 to-emerald-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  </button>
+                  {!readonly && (
+                    <button
+                      onClick={handleSave}
+                      disabled={loading}
+                      className="group relative flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          <span className="font-semibold">Saving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-5 w-5 group-hover:animate-pulse" />
+                          <span className="font-semibold">Save SOAP Note</span>
+                        </>
+                      )}
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-400/20 to-emerald-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </button>
+                  )}
                   
                   <button
                     onClick={onClose}

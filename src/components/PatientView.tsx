@@ -11,9 +11,11 @@ import { BasicPatientEditor } from './BasicPatientEditor';
 import { DNAAnalysis } from './DNAAnalysis';
 import PatientService from '../services/patient';
 import MedicalScanService from '../services/medicalScan';
+import SOAPService from '../services/soap';
 import {
   User, Calendar, Phone, Mail, MapPin, AlertTriangle, Pill, FileText,
-  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, TrendingUp, Edit3, Activity
+  Image, Brain, RefreshCw, ArrowLeft, Menu, X, Plus, TrendingUp, Edit3, Activity,
+  Trash2, Send, Edit, Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -47,6 +49,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
   const [currentSOAP, setCurrentSOAP] = useState<SOAPNote | null>(null);
   const [selectedScan, setSelectedScan] = useState<MedicalScan | null>(null);
   const [scanJustUploaded, setScanJustUploaded] = useState(false);
+  const [isSOAPReadonly, setIsSOAPReadonly] = useState(false);
 
   useEffect(() => {
     if (patientId) {
@@ -149,6 +152,7 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
   const handleNewSOAPNote = () => {
     if (patient) {
       setCurrentSOAP(null);
+      setIsSOAPReadonly(false);
       setShowSOAPEditor(true);
     }
   };
@@ -169,6 +173,48 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
     setShowSOAPEditor(false);
     setCurrentSOAP(null);
     loadPatientData(true);
+  };
+
+  const handleEditSOAP = (soapNote: SOAPNote) => {
+    setCurrentSOAP(soapNote);
+    setIsSOAPReadonly(false);
+    setShowSOAPEditor(true);
+  };
+
+  const handleViewSOAP = (soapNote: SOAPNote) => {
+    setCurrentSOAP(soapNote);
+    setIsSOAPReadonly(true);
+    setShowSOAPEditor(true);
+  };
+
+  const handleDeleteSOAP = async (soapNoteId: string) => {
+    if (!window.confirm('Are you sure you want to delete this SOAP note? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await SOAPService.deleteSOAPNote(soapNoteId);
+      setSoapNotes(prevNotes => prevNotes.filter(note => note.id !== soapNoteId));
+    } catch (error) {
+      console.error('Failed to delete SOAP note:', error);
+      alert('Failed to delete SOAP note. Please try again.');
+    }
+  };
+
+  const handlePublishSOAP = async (soapNoteId: string) => {
+    if (!window.confirm('Are you sure you want to publish this SOAP note? Once published, it will be marked as completed.')) {
+      return;
+    }
+
+    try {
+      const updatedNote = await SOAPService.publishSOAPNote(soapNoteId);
+      setSoapNotes(prevNotes => prevNotes.map(note => 
+        note.id === soapNoteId ? updatedNote : note
+      ));
+    } catch (error) {
+      console.error('Failed to publish SOAP note:', error);
+      alert('Failed to publish SOAP note. Please try again.');
+    }
   };
 
   const handleScanUploaded = (scan: MedicalScan) => {
@@ -753,6 +799,52 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
                                 <span>AI Assisted</span>
                               </div>
                             )}
+                            
+                            {/* Action Buttons */}
+                            <div className="flex items-center space-x-2 ml-4">
+                              {/* View/Edit Button */}
+                              <button
+                                onClick={() => note.status === 'completed' || note.status === 'reviewed' 
+                                  ? handleViewSOAP(note) 
+                                  : handleEditSOAP(note)
+                                }
+                                className="group flex items-center space-x-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 hover:text-blue-800 transition-all duration-200 border border-blue-200 hover:border-blue-300"
+                                title={note.status === 'completed' || note.status === 'reviewed' ? 'View SOAP Note' : 'Edit SOAP Note'}
+                              >
+                                {note.status === 'completed' || note.status === 'reviewed' ? (
+                                  <Eye className="h-4 w-4" />
+                                ) : (
+                                  <Edit className="h-4 w-4" />
+                                )}
+                                <span className="text-xs font-medium">
+                                  {note.status === 'completed' || note.status === 'reviewed' ? 'View' : 'Edit'}
+                                </span>
+                              </button>
+
+                              {/* Publish Button - Only show for draft notes */}
+                              {note.status === 'draft' && (
+                                <button
+                                  onClick={() => handlePublishSOAP(note.id)}
+                                  className="group flex items-center space-x-2 px-3 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 hover:text-green-800 transition-all duration-200 border border-green-200 hover:border-green-300"
+                                  title="Publish SOAP Note"
+                                >
+                                  <Send className="h-4 w-4" />
+                                  <span className="text-xs font-medium">Publish</span>
+                                </button>
+                              )}
+
+                              {/* Delete Button - Only show for draft notes */}
+                              {note.status === 'draft' && (
+                                <button
+                                  onClick={() => handleDeleteSOAP(note.id)}
+                                  className="group flex items-center space-x-2 px-3 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 hover:text-red-800 transition-all duration-200 border border-red-200 hover:border-red-300"
+                                  title="Delete SOAP Note"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="text-xs font-medium">Delete</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -1180,7 +1272,9 @@ export const PatientView: React.FC<PatientViewProps> = ({ doctorId }) => {
           onClose={() => {
             setShowSOAPEditor(false);
             setCurrentSOAP(null);
+            setIsSOAPReadonly(false);
           }}
+          readonly={isSOAPReadonly}
           onPatientUpdated={(updatedPatient) => {
             setPatient(updatedPatient);
             // Refresh patient data to show updated info

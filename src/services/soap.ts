@@ -47,6 +47,21 @@ export class SOAPService {
     if (error) throw error;
   }
 
+  async publishSOAPNote(id: string): Promise<SOAPNote> {
+    const { data, error } = await supabase
+      .from('soap_notes')
+      .update({ 
+        status: 'completed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   async startVoiceSession(soapNoteId: string): Promise<VoiceSession> {
     const { data, error } = await supabase
       .from('voice_sessions')
