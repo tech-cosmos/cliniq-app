@@ -105,7 +105,7 @@ export const BiometricsChart: React.FC<BiometricsChartProps> = ({
               const y = padding + innerHeight - (ratio * innerHeight);
               return (
                 <text key={index} x={padding - 12} y={y + 4} textAnchor="end" className="fill-gray-500">
-                  {metricKey === 'gait_speed' ? value.toFixed(2) : value.toFixed(1)}{metricUnit}
+                  {metricKey === 'gait_speed' ? value.toFixed(2) : value.toFixed(1)}
                 </text>
               );
             })}
@@ -123,17 +123,6 @@ export const BiometricsChart: React.FC<BiometricsChartProps> = ({
             })}
           </g>
 
-          {/* Enhanced line chart */}
-          <path
-            d={pathString}
-            fill="none"
-            stroke={color}
-            strokeWidth="4"
-            className="drop-shadow-lg"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            filter={`url(#glow-${metricKey})`}
-          />
 
           {/* Data points */}
           {points.map((point, index) => {
