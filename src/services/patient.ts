@@ -114,6 +114,123 @@ export class PatientService {
 
     return { patient, soapNotes, medicalScans };
   }
+
+  async getCriticalCases(): Promise<Patient[]> {
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select(`
+          *,
+          soap_notes(id, created_at, status, chief_complaint, assessment, plan),
+          medical_scans(id, urgency_level, ai_findings, created_at)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Filter and rank patients by criticality
+      const criticalPatients = (data || []).filter(patient => {
+        let criticalScore = 0;
+
+        // Check for multiple allergies (high risk)
+        if (patient.allergies && patient.allergies.length >= 3) {
+          criticalScore += 3;
+        }
+        
+        // Check for specific critical allergies
+        const criticalAllergies = ['penicillin', 'shellfish', 'peanuts', 'latex', 'contrast dye', 'aspirin', 'morphine'];
+        if (patient.allergies?.some((allergy: string) => 
+          criticalAllergies.some(critical => 
+            allergy.toLowerCase().includes(critical.toLowerCase())
+          )
+        )) {
+          criticalScore += 2;
+        }
+
+        // Check for recent critical/high urgency scans
+        const recentCriticalScans = patient.medical_scans?.filter((scan: any) => 
+          (scan.urgency_level === 'critical' || scan.urgency_level === 'high') &&
+          new Date(scan.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+        );
+        if (recentCriticalScans && recentCriticalScans.length > 0) {
+          criticalScore += recentCriticalScans.length;
+        }
+
+        // Check for concerning keywords in recent SOAP notes
+        const recentNotes = patient.soap_notes?.filter((note: any) =>
+          new Date(note.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+        );
+        
+        const criticalKeywords = ['urgent', 'critical', 'emergency', 'acute', 'severe', 'unstable', 'deteriorating', 'crisis', 'immediate', 'stat'];
+        const hasCriticalAssessment = recentNotes?.some((note: any) => 
+          (note.assessment && criticalKeywords.some((keyword: string) => 
+            note.assessment.toLowerCase().includes(keyword)
+          )) ||
+          (note.plan && criticalKeywords.some((keyword: string) => 
+            note.plan.toLowerCase().includes(keyword)
+          )) ||
+          (note.chief_complaint && criticalKeywords.some((keyword: string) => 
+            note.chief_complaint.toLowerCase().includes(keyword)
+          ))
+        );
+        if (hasCriticalAssessment) {
+          criticalScore += 2;
+        }
+
+        // Check for recent multiple visits (could indicate unstable condition)
+        if (recentNotes && recentNotes.length >= 3) {
+          criticalScore += 1;
+        }
+
+        return criticalScore >= 2; // Threshold for being considered critical
+      });
+
+      // Sort by criticality score (most critical first)
+      return criticalPatients.sort((a: any, b: any) => {
+        const scoreA = this.calculateCriticalityScore(a);
+        const scoreB = this.calculateCriticalityScore(b);
+        return scoreB - scoreA;
+      });
+    } catch (error) {
+      console.error('Failed to get critical cases:', error);
+      return [];
+    }
+  }
+
+  calculateCriticalityScore(patient: Patient & { soap_notes?: any[]; medical_scans?: any[] }): number {
+    let score = 0;
+    
+    if (patient.allergies && patient.allergies.length >= 3) score += 3;
+    
+    const criticalAllergies = ['penicillin', 'shellfish', 'peanuts', 'latex', 'contrast dye', 'aspirin', 'morphine'];
+    if (patient.allergies?.some((allergy: string) => 
+      criticalAllergies.some(critical => allergy.toLowerCase().includes(critical.toLowerCase()))
+    )) score += 2;
+
+    const recentCriticalScans = patient.medical_scans?.filter((scan: any) => 
+      (scan.urgency_level === 'critical' || scan.urgency_level === 'high') &&
+      new Date(scan.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    );
+    if (recentCriticalScans?.length) score += recentCriticalScans.length;
+
+    const recentNotes = patient.soap_notes?.filter((note: any) =>
+      new Date(note.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    );
+    
+    const criticalKeywords = ['urgent', 'critical', 'emergency', 'acute', 'severe', 'unstable', 'deteriorating', 'crisis'];
+    const hasCriticalContent = recentNotes?.some((note: any) => 
+      criticalKeywords.some((keyword: string) => 
+        note.assessment?.toLowerCase().includes(keyword) ||
+        note.plan?.toLowerCase().includes(keyword) ||
+        note.chief_complaint?.toLowerCase().includes(keyword)
+      )
+    );
+    if (hasCriticalContent) score += 2;
+
+    if (recentNotes && recentNotes.length >= 3) score += 1;
+
+    return score;
+  }
 }
 
 const patientServiceInstance = new PatientService();

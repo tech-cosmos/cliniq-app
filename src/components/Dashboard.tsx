@@ -51,6 +51,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
   const [showPendingScans, setShowPendingScans] = useState(false);
   const [showPatientSelection, setShowPatientSelection] = useState(false);
   const [patientSearchTerm, setPatientSearchTerm] = useState('');
+  const [showCriticalCases, setShowCriticalCases] = useState(false);
+  const [criticalCases, setCriticalCases] = useState<Patient[]>([]);
 
   // Dashboard stats
   const [stats, setStats] = useState({
@@ -91,16 +93,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
       const pendingScansData = await MedicalScanService.getPendingScans();
       setPendingScans(pendingScansData);
 
-      // Calculate critical cases based on patients with allergies
-      const criticalCases = patientsData.filter(patient => 
-        patient.allergies && patient.allergies.length > 0
-      ).length;
+      // Fetch critical cases using the comprehensive algorithm
+      const criticalCasesData = await PatientService.getCriticalCases();
+      setCriticalCases(criticalCasesData);
 
       setStats({
         totalPatients: patientsData.length,
         todayNotes: todayNotesData.length,
         pendingScans: pendingScansData.length,
-        criticalCases: criticalCases
+        criticalCases: criticalCasesData.length
       });
     } catch (error) {
       console.error('Failed to calculate stats:', error);
@@ -306,6 +307,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
             icon={<AlertTriangle className="h-7 w-7" />}
             color="bg-gradient-to-r from-red-500 to-red-600"
             gradient="bg-gradient-to-br from-red-500 to-red-600"
+            clickable={true}
+            onClick={() => setShowCriticalCases(true)}
           />
         </div>
 
@@ -912,6 +915,229 @@ export const Dashboard: React.FC<DashboardProps> = ({ doctorId }) => {
                         )}
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Critical Cases Modal */}
+      {showCriticalCases && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/95 backdrop-blur-xl w-full max-w-5xl h-full max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden border border-gray-200/50">
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white p-6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-rose-400/20"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-white/20 backdrop-blur-sm p-3 rounded-2xl shadow-xl">
+                        <AlertTriangle className="h-8 w-8 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold mb-1">Critical Cases</h2>
+                        <p className="text-red-100">{criticalCases.length} patients require immediate attention</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowCriticalCases(false)}
+                      className="group p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all duration-200"
+                    >
+                      <X className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50 via-red-50/20 to-rose-50/20">
+                {criticalCases.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <AlertTriangle className="h-10 w-10 text-green-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">No Critical Cases</h3>
+                    <p className="text-gray-600">All patients are currently stable with no critical indicators.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {criticalCases.map((patient) => {
+                      const criticalityScore = PatientService.calculateCriticalityScore(patient);
+                      const riskLevel = criticalityScore >= 5 ? 'High' : criticalityScore >= 3 ? 'Medium' : 'Low';
+                      const riskColor = criticalityScore >= 5 ? 'red' : criticalityScore >= 3 ? 'orange' : 'yellow';
+                      
+                      return (
+                        <div key={patient.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/50 hover:shadow-xl transition-all duration-300">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-4">
+                              <div className="relative">
+                                <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                                  <span className="text-lg font-bold">
+                                    {patient.first_name[0]}{patient.last_name[0]}
+                                  </span>
+                                </div>
+                                <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                                  riskColor === 'red' ? 'bg-red-500 text-white' :
+                                  riskColor === 'orange' ? 'bg-orange-500 text-white' : 'bg-yellow-500 text-white'
+                                } shadow-lg`}>
+                                  !
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h4 className="text-lg font-bold text-gray-900">
+                                    {patient.first_name} {patient.last_name}
+                                  </h4>
+                                  <span className={`px-3 py-1 text-xs font-bold rounded-full ${
+                                    riskColor === 'red' ? 'bg-red-100 text-red-800' :
+                                    riskColor === 'orange' ? 'bg-orange-100 text-orange-800' : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    {riskLevel} Risk
+                                  </span>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-sm text-gray-600 flex items-center space-x-2">
+                                    <span className="font-medium">MRN:</span>
+                                    <span>{patient.medical_record_number}</span>
+                                  </p>
+                                  <p className="text-sm text-gray-600 flex items-center space-x-2">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>{new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()} years old</span>
+                                    <span>•</span>
+                                    <span className="capitalize">{patient.gender}</span>
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <div className={`text-2xl font-bold ${
+                                riskColor === 'red' ? 'text-red-600' :
+                                riskColor === 'orange' ? 'text-orange-600' : 'text-yellow-600'
+                              }`}>
+                                {criticalityScore}
+                              </div>
+                              <button
+                                onClick={() => {
+                                  navigate(`/patient/${patient.id}`);
+                                }}
+                                className="p-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {/* Critical Allergies */}
+                            {patient.allergies && patient.allergies.length > 0 && (
+                              <div className="bg-red-50 rounded-lg p-4">
+                                <h6 className="text-xs font-bold text-red-800 mb-2 flex items-center space-x-2">
+                                  <AlertTriangle className="h-4 w-4" />
+                                  <span>ALLERGIES ({patient.allergies.length})</span>
+                                </h6>
+                                <div className="space-y-1">
+                                  {patient.allergies.slice(0, 3).map((allergy, index) => (
+                                    <div key={index} className="text-red-700 text-sm flex items-center space-x-2">
+                                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                      <span>{allergy}</span>
+                                    </div>
+                                  ))}
+                                  {patient.allergies.length > 3 && (
+                                    <p className="text-red-600 text-xs">...and {patient.allergies.length - 3} more</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Medical History */}
+                            {patient.medical_history && patient.medical_history.length > 0 && (
+                              <div className="bg-gray-50 rounded-lg p-4">
+                                <h6 className="text-xs font-bold text-gray-800 mb-2 flex items-center space-x-2">
+                                  <FileText className="h-4 w-4" />
+                                  <span>MEDICAL HISTORY</span>
+                                </h6>
+                                <div className="space-y-1">
+                                  {patient.medical_history.slice(0, 2).map((condition, index) => (
+                                    <div key={index} className="text-gray-700 text-sm flex items-center space-x-2">
+                                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                                      <span>{condition}</span>
+                                    </div>
+                                  ))}
+                                  {patient.medical_history.length > 2 && (
+                                    <p className="text-gray-600 text-xs">...and {patient.medical_history.length - 2} more</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Current Medications */}
+                            {patient.current_medications && patient.current_medications.length > 0 && (
+                              <div className="bg-blue-50 rounded-lg p-4">
+                                <h6 className="text-xs font-bold text-blue-800 mb-2 flex items-center space-x-2">
+                                  <Brain className="h-4 w-4" />
+                                  <span>MEDICATIONS ({patient.current_medications.length})</span>
+                                </h6>
+                                <div className="space-y-1">
+                                  {patient.current_medications.slice(0, 2).map((medication, index) => (
+                                    <div key={index} className="text-blue-700 text-sm flex items-center space-x-2">
+                                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                      <span>{medication}</span>
+                                    </div>
+                                  ))}
+                                  {patient.current_medications.length > 2 && (
+                                    <p className="text-blue-600 text-xs">...and {patient.current_medications.length - 2} more</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* AI Summary Preview */}
+                            {patient.ai_summary && (
+                              <div className="bg-purple-50 rounded-lg p-4 lg:col-span-2">
+                                <h6 className="text-xs font-bold text-purple-800 mb-2 flex items-center space-x-2">
+                                  <Brain className="h-4 w-4" />
+                                  <span>AI SUMMARY</span>
+                                </h6>
+                                <p className="text-purple-700 text-sm line-clamp-3">{patient.ai_summary}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs text-gray-500">
+                                Last updated: {format(new Date(patient.updated_at), 'MMM dd, yyyy h:mm a')}
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => {
+                                    setShowCriticalCases(false);
+                                    handleNewSOAPNote(patient);
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
+                                >
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  New Note
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setShowCriticalCases(false);
+                                    handleUploadScan(patient);
+                                  }}
+                                  className="inline-flex items-center px-3 py-2 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                                >
+                                  <Image className="h-3 w-3 mr-1" />
+                                  Upload Scan
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
