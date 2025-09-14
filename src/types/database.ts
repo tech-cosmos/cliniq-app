@@ -81,6 +81,17 @@ export interface SOAPNote {
   updated_by?: string;
 }
 
+export interface SOAPNoteWithPatient extends SOAPNote {
+  patients: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    medical_record_number: string;
+    date_of_birth: string;
+    gender: string;
+  };
+}
+
 export interface MedicalScan {
   id: string;
   created_at: string;

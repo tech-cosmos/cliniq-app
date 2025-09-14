@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import { SOAPNote, VoiceSession } from '../types/database';
+import { SOAPNote, SOAPNoteWithPatient, VoiceSession } from '../types/database';
 import DeepgramService from './deepgram';
 import GeminiService from './gemini';
 
@@ -60,6 +60,42 @@ export class SOAPService {
 
     if (error) throw error;
     return data;
+  }
+
+  async getTodaysSOAPNotes(): Promise<SOAPNoteWithPatient[]> {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+
+    const { data, error } = await supabase
+      .from('soap_notes')
+      .select(`
+        *,
+        patients!inner (
+          id,
+          first_name,
+          last_name,
+          medical_record_number,
+          date_of_birth,
+          gender
+        )
+      `)
+      .gte('created_at', startOfDay)
+      .lt('created_at', endOfDay)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getAllSOAPNotes(): Promise<SOAPNote[]> {
+    const { data, error } = await supabase
+      .from('soap_notes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   }
 
   async startVoiceSession(soapNoteId: string): Promise<VoiceSession> {

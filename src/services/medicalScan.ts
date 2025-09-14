@@ -146,6 +146,28 @@ export class MedicalScanService {
     return data || [];
   }
 
+  async getAllScans(): Promise<MedicalScan[]> {
+    const { data, error } = await supabase
+      .from('medical_scans')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getPendingScans(): Promise<MedicalScan[]> {
+    const { data, error } = await supabase
+      .from('medical_scans')
+      .select('*')
+      .or('urgency_level.eq.high,urgency_level.eq.critical')
+      .is('radiologist_notes', null)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
   async deleteScan(id: string): Promise<void> {
     // Get scan to find file path
     const scan = await this.getScan(id);
