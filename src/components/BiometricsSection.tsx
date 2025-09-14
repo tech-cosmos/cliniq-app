@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Biometrics } from '../types/database';
 import { BiometricsChart } from './BiometricsChart';
+import { PhysicianReport } from './PhysicianReport';
 import BiometricsService from '../services/biometrics';
-import { TrendingUp, Activity, Brain, Heart, Download } from 'lucide-react';
+import BiometricsAnalysisService from '../services/biometricsAnalysis';
+import { TrendingUp, Activity, Brain, Heart, Download, FileText, Loader } from 'lucide-react';
 
 interface BiometricsSectionProps {
   patientId: string;
@@ -12,6 +14,9 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
   const [biometrics, setBiometrics] = useState<Biometrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showReport, setShowReport] = useState(false);
+  const [report, setReport] = useState<any>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   useEffect(() => {
     loadBiometrics();
@@ -84,6 +89,27 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
     }
   };
 
+  const generateResearchReport = async () => {
+    if (biometrics.length === 0) return;
+
+    try {
+      setGeneratingReport(true);
+      setError(null);
+
+      console.log('Generating physician report for patient:', patientId);
+      const generatedReport = await BiometricsAnalysisService.generatePhysicianReport(patientId, biometrics);
+      console.log('Report generated:', generatedReport);
+
+      setReport(generatedReport);
+      setShowReport(true);
+    } catch (err) {
+      console.error('Failed to generate report:', err);
+      setError(`Failed to generate research report: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   const getCategoryIcon = (categoryKey: string) => {
     switch (categoryKey) {
       case 'cardiopulmonary':
@@ -149,6 +175,19 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
             {biometrics.length} data points across {new Set(biometrics.map(b => b.timepoint)).size} timepoints
           </div>
           <button
+            onClick={generateResearchReport}
+            disabled={generatingReport || biometrics.length === 0}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Generate AI-powered physician report"
+          >
+            {generatingReport ? (
+              <Loader className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            <span>{generatingReport ? 'Generating...' : 'Research Report'}</span>
+          </button>
+          <button
             onClick={exportToCSV}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             title="Export data to CSV"
@@ -186,6 +225,17 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
           </div>
         );
       })}
+
+      {/* Research Report Modal */}
+      {showReport && report && (
+        <PhysicianReport
+          report={report}
+          onClose={() => {
+            setShowReport(false);
+            setReport(null);
+          }}
+        />
+      )}
     </div>
   );
 };
