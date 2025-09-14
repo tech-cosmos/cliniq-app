@@ -1,4 +1,4 @@
-# Cliniq - AI-Powered SOAP Note Taking App
+# Progonomix - AI-Powered SOAP Note Taking App
 
 A comprehensive medical application that enables doctors to create SOAP notes using voice transcription, analyze medical scans with AI, and receive diagnostic assistance for better patient care.
 
