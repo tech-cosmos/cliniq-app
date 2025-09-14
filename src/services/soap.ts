@@ -102,18 +102,25 @@ export class SOAPService {
       );
 
       return async () => {
+        console.log('Stop recording function called');
         if (voiceSession) {
+          console.log('Stopping Deepgram session...');
           const audioBlob = DeepgramService.stopVoiceSession();
+          console.log('Deepgram session stopped, audioBlob:', audioBlob);
           
           await this.updateVoiceSession(voiceSession.id, {
             status: 'completed',
             transcript: fullTranscript.trim(),
             audio_duration: audioBlob ? Math.round(audioBlob.size / 1000) : 0
           });
+          console.log('Voice session updated');
 
           await this.updateSOAPNote(soapNoteId, {
             voice_transcript: fullTranscript.trim()
           });
+          console.log('SOAP note updated');
+        } else {
+          console.log('No voice session to stop');
         }
       };
     } catch (error) {

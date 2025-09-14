@@ -151,21 +151,23 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
 
   const startRecording = async () => {
     try {
-      if (!currentSoapNoteId) {
-        await createNewSOAPNote();
+      let noteId = currentSoapNoteId;
+      if (!noteId) {
+        noteId = await createNewSOAPNote();
       }
       
       setIsRecording(true);
       setShowVoiceRecorder(true);
       
       const stopFunction = await SOAPService.processVoiceToSOAP(
-        currentSoapNoteId!,
+        noteId,
         (newTranscript: string) => {
           handleVoiceTranscriptUpdate(newTranscript);
         },
         (error: any) => {
           console.error('Voice recording error:', error);
           setIsRecording(false);
+          setShowVoiceRecorder(false);
         }
       );
 
@@ -173,18 +175,29 @@ export const ComprehensiveSOAPNoteEditor: React.FC<ComprehensiveSOAPNoteEditorPr
     } catch (error) {
       console.error('Failed to start recording:', error);
       setIsRecording(false);
+      setShowVoiceRecorder(false);
     }
   };
 
   const stopRecording = async () => {
+    console.log('stopRecording called, stopRecordingRef.current:', !!stopRecordingRef.current);
     if (stopRecordingRef.current) {
       try {
+        console.log('Calling stop function...');
         await stopRecordingRef.current();
+        console.log('Stop function completed');
         setIsRecording(false);
+        setShowVoiceRecorder(false);
+        stopRecordingRef.current = null;
         handleRecordingComplete();
       } catch (error) {
         console.error('Failed to stop recording:', error);
+        setIsRecording(false);
+        setShowVoiceRecorder(false);
+        stopRecordingRef.current = null;
       }
+    } else {
+      console.log('No stop function available');
     }
   };
 

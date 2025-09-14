@@ -11,47 +11,56 @@ class DeepgramService {
     this.deepgram = createClient(process.env.REACT_APP_DEEPGRAM_API_KEY!);
   }
 
-  async startVoiceSession(onTranscript: (text: string) => void, onError: (error: any) => void) {
-    try {
-      this.connection = this.deepgram.listen.live({
-        model: 'nova-2',
-        language: 'en-US',
-        smart_format: true,
-        filler_words: false,
-        punctuate: true,
-        utterance_end_ms: 1000,
-        vad_events: true,
-        interim_results: true,
-      });
+  async startVoiceSession(onTranscript: (text: string) => void, onError: (error: any) => void): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        this.connection = this.deepgram.listen.live({
+          model: 'nova-2',
+          language: 'en-US',
+          smart_format: true,
+          filler_words: false,
+          punctuate: true,
+          utterance_end_ms: 1000,
+          vad_events: true,
+          interim_results: true,
+        });
 
-      this.connection.on(LiveTranscriptionEvents.Open, () => {
-        console.log('Deepgram connection opened');
-        this.startAudioCapture(onTranscript, onError);
-      });
+        this.connection.on(LiveTranscriptionEvents.Open, async () => {
+          console.log('Deepgram connection opened');
+          try {
+            await this.startAudioCapture(onTranscript, onError);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        });
 
-      this.connection.on(LiveTranscriptionEvents.Transcript, (data: any) => {
-        const transcript = data.channel?.alternatives?.[0]?.transcript;
-        if (transcript && data.is_final) {
-          onTranscript(transcript);
-        }
-      });
+        this.connection.on(LiveTranscriptionEvents.Transcript, (data: any) => {
+          const transcript = data.channel?.alternatives?.[0]?.transcript;
+          if (transcript && data.is_final) {
+            onTranscript(transcript);
+          }
+        });
 
-      this.connection.on(LiveTranscriptionEvents.Error, (error: any) => {
-        console.error('Deepgram error:', error);
+        this.connection.on(LiveTranscriptionEvents.Error, (error: any) => {
+          console.error('Deepgram error:', error);
+          onError(error);
+          reject(error);
+        });
+
+        this.connection.on(LiveTranscriptionEvents.Close, () => {
+          console.log('Deepgram connection closed');
+        });
+
+      } catch (error) {
+        console.error('Failed to start voice session:', error);
         onError(error);
-      });
-
-      this.connection.on(LiveTranscriptionEvents.Close, () => {
-        console.log('Deepgram connection closed');
-      });
-
-    } catch (error) {
-      console.error('Failed to start voice session:', error);
-      onError(error);
-    }
+        reject(error);
+      }
+    });
   }
 
-  private async startAudioCapture(onTranscript: (text: string) => void, onError: (error: any) => void) {
+  private async startAudioCapture(onTranscript: (text: string) => void, onError: (error: any) => void): Promise<void> {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: { 
