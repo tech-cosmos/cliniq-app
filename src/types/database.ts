@@ -138,3 +138,50 @@ export interface Biometrics {
   quality_of_life?: number; // 0-100 scale
   fatigue_score?: number; // 0-10 scale
 }
+
+export interface StoredDNAAnalysis {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  patient_id: string;
+  
+  // File information
+  filename: string;
+  file_size?: number;
+  
+  // Analysis parameters
+  databases_analyzed: string[];
+  
+  // Analysis results
+  total_variants_analyzed: number;
+  databases_searched: string[];
+  
+  // Risk assessment
+  risk_assessment: 'Low' | 'Medium' | 'High';
+  
+  // Counts
+  total_diseases_found: number;
+  total_allergies_found: number;
+  total_drug_interactions_found: number;
+  
+  // Detailed results
+  diseases_variants: DNAVariant[];
+  allergies_variants: DNAVariant[];
+  drug_interactions_variants: DNAVariant[];
+  
+  // Analysis metadata
+  analysis_duration_seconds?: number;
+  api_response?: any;
+  
+  // Timestamps
+  analysis_completed_at: string;
+}
+
+export interface DNAVariant {
+  chromosome: string;
+  position: number;
+  reference_allele: string;
+  alternate_allele: string;
+  info: string;
+  database_type: 'diseases' | 'allergies' | 'drug_interactions';
+}
