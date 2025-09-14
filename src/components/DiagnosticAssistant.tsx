@@ -17,11 +17,10 @@ export const DiagnosticAssistant: React.FC<DiagnosticAssistantProps> = ({
   recentScans,
   onSuggestionSelect
 }) => {
-  const [activeTab, setActiveTab] = useState<'symptoms' | 'differential' | 'scan-correlation' | 'drug-interactions'>('symptoms');
+  const [activeTab, setActiveTab] = useState<'symptoms' | 'scan-correlation' | 'drug-interactions'>('symptoms');
   const [loading, setLoading] = useState(false);
   const [symptomInput, setSymptomInput] = useState('');
   const [diagnosticSuggestions, setDiagnosticSuggestions] = useState<string[]>([]);
-  const [differentialDiagnoses, setDifferentialDiagnoses] = useState<any[]>([]);
   const [scanCorrelations, setScanCorrelations] = useState<string>('');
   const [drugInteractions, setDrugInteractions] = useState<any[]>([]);
 
@@ -48,50 +47,6 @@ export const DiagnosticAssistant: React.FC<DiagnosticAssistantProps> = ({
     }
   };
 
-  const generateDifferentialDiagnoses = async () => {
-    if (!currentSOAP) return;
-
-    try {
-      setLoading(true);
-      const symptoms = `${currentSOAP.subjective || ''} ${currentSOAP.objective || ''}`.trim();
-      
-      const prompt = `
-        Generate a differential diagnosis list for the following case:
-        
-        Patient: ${patient.first_name} ${patient.last_name}
-        Age: ${new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()}
-        Gender: ${patient.gender}
-        Medical History: ${patient.medical_history?.join(', ') || 'None'}
-        Current Medications: ${patient.current_medications?.join(', ') || 'None'}
-        Allergies: ${patient.allergies?.join(', ') || 'None'}
-        
-        Symptoms and Findings: ${symptoms}
-        
-        Provide a JSON array of differential diagnoses with likelihood and reasoning:
-        [
-          {
-            "diagnosis": "diagnosis name",
-            "likelihood": "high|medium|low",
-            "reasoning": "brief explanation",
-            "nextSteps": ["test 1", "test 2"]
-          }
-        ]
-      `;
-
-      const result = await GeminiService.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      const jsonMatch = text.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        setDifferentialDiagnoses(JSON.parse(jsonMatch[0]));
-      }
-    } catch (error) {
-      console.error('Failed to generate differential diagnoses:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const correlateScanFindings = async () => {
     if (!recentScans || recentScans.length === 0) return;
@@ -177,13 +132,6 @@ export const DiagnosticAssistant: React.FC<DiagnosticAssistantProps> = ({
     }
   };
 
-  const getLikelihoodColor = (likelihood: string) => {
-    switch (likelihood) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-green-100 text-green-800';
-    }
-  };
 
   return (
     <div className="h-full flex flex-col">
@@ -203,7 +151,6 @@ export const DiagnosticAssistant: React.FC<DiagnosticAssistantProps> = ({
           <nav className="flex space-x-3 overflow-x-auto scrollbar-hide pb-4">
             {[
               { id: 'symptoms', label: 'Symptom Analysis', icon: Search },
-              { id: 'differential', label: 'Differential Dx', icon: Stethoscope },
               { id: 'scan-correlation', label: 'Scan Correlation', icon: BookOpen },
               { id: 'drug-interactions', label: 'Drug Interactions', icon: AlertTriangle },
             ].map(({ id, label, icon: Icon }) => (
@@ -314,101 +261,6 @@ export const DiagnosticAssistant: React.FC<DiagnosticAssistantProps> = ({
           </div>
         )}
 
-        {activeTab === 'differential' && (
-          <div className="space-y-8">
-            {/* Generate Button */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="bg-gradient-to-r from-purple-500 to-blue-600 p-2 rounded-xl shadow-lg">
-                  <Stethoscope className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900">Differential Diagnosis</h3>
-              </div>
-              
-              <button
-                onClick={generateDifferentialDiagnoses}
-                disabled={loading || !currentSOAP}
-                className="group relative flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span className="font-semibold">Generating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Brain className="h-5 w-5 group-hover:animate-pulse" />
-                    <span className="font-semibold">Generate Differential Diagnoses</span>
-                  </>
-                )}
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-400/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </button>
-              
-              {!currentSOAP && (
-                <p className="text-gray-500 text-sm mt-3 italic">
-                  Please create or select a SOAP note to generate differential diagnoses.
-                </p>
-              )}
-            </div>
-
-            {/* Differential Diagnoses Results */}
-            {differentialDiagnoses.length > 0 && (
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 shadow-lg border border-blue-200/50">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-2 rounded-xl shadow-lg">
-                    <Stethoscope className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900">Differential Diagnoses</h3>
-                </div>
-                
-                <div className="grid gap-6">
-                  {differentialDiagnoses.map((dx, index) => (
-                    <div key={index} className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-md border border-blue-200/50">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0 mt-0.5">
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">{index + 1}</span>
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-bold text-gray-900">{dx.diagnosis}</h4>
-                          </div>
-                        </div>
-                        <span className={`px-3 py-1.5 rounded-full text-xs font-bold border-2 ${getLikelihoodColor(dx.likelihood)}`}>
-                          {dx.likelihood} likelihood
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-4 ml-11">
-                        <div className="bg-gray-50 rounded-lg p-4">
-                          <h5 className="font-semibold text-gray-800 mb-2">Clinical Reasoning</h5>
-                          <p className="text-gray-700 leading-relaxed">{dx.reasoning}</p>
-                        </div>
-                        
-                        {dx.nextSteps && dx.nextSteps.length > 0 && (
-                          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200/50">
-                            <h5 className="font-semibold text-blue-800 mb-3">Recommended Next Steps</h5>
-                            <div className="grid gap-2">
-                              {dx.nextSteps.map((step: string, stepIndex: number) => (
-                                <div key={stepIndex} className="flex items-center space-x-3">
-                                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span className="text-white text-xs font-bold">{stepIndex + 1}</span>
-                                  </div>
-                                  <span className="text-blue-700 font-medium">{step}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {activeTab === 'scan-correlation' && (
           <div className="space-y-8">
