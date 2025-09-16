@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Progonomix",
+  "name": "Progonomix - AI-Powered Medical Companion",
+  "description": "Advanced healthcare management platform with AI-powered diagnostic assistance, voice transcription, and medical imaging analysis",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,18 +9,41 @@
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "favicon-16x16.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "16x16"
     },
     {
-      "src": "logo512.png",
+      "src": "favicon-32x32.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "32x32"
+    },
+    {
+      "src": "android-chrome-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180",
+      "purpose": "any"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait-primary",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "categories": ["health", "medical", "productivity", "business"],
+  "lang": "en-US",
+  "scope": "/",
+  "id": "progonomix-medical-platform"
 }

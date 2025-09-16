@@ -1,3 +1,20 @@
 # https://www.robotstxt.org/robotstxt.html
+# Progonomix - AI-Powered Medical Companion Platform
+
 User-agent: *
-Disallow:
+Allow: /
+
+# Allow access to static assets
+Allow: /static/
+
+# Disallow sensitive or private areas
+Disallow: /api/
+Disallow: /patient/
+Disallow: /_/
+Disallow: /private/
+
+# Sitemap location
+Sitemap: https://progonomix.com/sitemap.xml
+
+# Crawl delay for politeness (optional)
+Crawl-delay: 1

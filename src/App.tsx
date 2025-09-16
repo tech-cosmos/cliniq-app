@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Dashboard } from './components/Dashboard';
 import { PatientView } from './components/PatientView';
+import SEO from './components/SEO';
 import './App.css';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
 
   return (
     <div className="App">
+      <SEO />
       <Router>
         <Routes>
           <Route path="/" element={<Dashboard doctorId={doctorId} />} />
