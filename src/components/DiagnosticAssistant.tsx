@@ -53,25 +53,89 @@ export const DiagnosticAssistant: React.FC<DiagnosticAssistantProps> = ({
 
     try {
       setLoading(true);
-      const scanData = recentScans.map(scan => ({
-        type: scan.scan_type,
-        findings: scan.ai_findings,
-        analysis: scan.ai_analysis
-      }));
+      
+      // Enhanced scan data with timestamps and more context
+      const scanData = recentScans.map((scan, index) => ({
+        scanNumber: index + 1,
+        scanId: scan.id,
+        type: scan.scan_type.toUpperCase(),
+        fileName: scan.file_name,
+        timestamp: scan.created_at,
+        urgencyLevel: scan.urgency_level,
+        findings: scan.ai_findings || [],
+        analysis: scan.ai_analysis || 'No AI analysis available',
+        radiologistNotes: scan.radiologist_notes || 'No radiologist review yet'
+      })).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
       const clinicalData = {
         symptoms: currentSOAP?.subjective || '',
         examination: currentSOAP?.objective || '',
-        assessment: currentSOAP?.assessment || ''
+        assessment: currentSOAP?.assessment || '',
+        plan: currentSOAP?.plan || ''
+      };
+
+      const patientContext = {
+        age: new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear(),
+        gender: patient.gender,
+        medicalHistory: patient.medical_history || [],
+        currentMedications: patient.current_medications || [],
+        allergies: patient.allergies || []
       };
 
       const prompt = `
-        Correlate the following medical scan findings with the clinical presentation:
+        You are an expert radiologist providing COMPREHENSIVE SCAN CORRELATION ANALYSIS.
         
-        Clinical Data: ${JSON.stringify(clinicalData, null, 2)}
-        Scan Findings: ${JSON.stringify(scanData, null, 2)}
+        PATIENT CONTEXT:
+        ${JSON.stringify(patientContext, null, 2)}
         
-        Provide a clinical correlation analysis explaining how the scan findings relate to the symptoms and examination findings.
+        CLINICAL PRESENTATION:
+        ${JSON.stringify(clinicalData, null, 2)}
+        
+        IMAGING STUDIES (${scanData.length} scans available):
+        ${JSON.stringify(scanData, null, 2)}
+        
+        ANALYSIS PROTOCOL:
+        
+        1. INDIVIDUAL SCAN INTERPRETATION:
+        - Systematically review each scan's findings
+        - Assess the clinical significance of each finding
+        - Identify the urgency level and rationale
+        
+        2. COMPARATIVE ANALYSIS (if multiple scans):
+        - Compare findings between scans chronologically
+        - Identify progression, improvement, or stability
+        - Note new findings or resolution of previous abnormalities
+        - Assess healing progress or disease progression
+        - Compare similar anatomical regions across different scan types
+        
+        3. CLINICAL CORRELATION:
+        - Correlate imaging findings with reported symptoms
+        - Explain how scan results support or contradict clinical assessment
+        - Identify findings that may explain patient's complaints
+        - Highlight any discrepancies requiring further investigation
+        
+        4. PROGRESSION ASSESSMENT:
+        - **IMPROVEMENT**: Evidence of healing, reduced inflammation, fracture union
+        - **STABLE**: No significant change in findings
+        - **PROGRESSION**: Worsening pathology, new lesions, complications
+        - **MIXED**: Some areas improving while others progressing
+        
+        5. RECOMMENDATIONS:
+        - Follow-up imaging requirements
+        - Additional studies needed
+        - Clinical actions based on findings
+        - Referral recommendations
+        
+        SPECIFIC FOCUS FOR MULTIPLE SCANS:
+        - Bone healing assessment (for fractures)
+        - Soft tissue changes over time
+        - Response to treatment interventions
+        - Development of complications
+        - Functional improvement correlation
+        
+        Format your response with clear sections and clinical reasoning. Provide specific examples from the scan findings to support your conclusions.
+        
+        IMPORTANT: Focus on practical clinical insights that help guide patient management decisions.
       `;
 
       const result = await GeminiService.model.generateContent(prompt);
@@ -79,6 +143,7 @@ export const DiagnosticAssistant: React.FC<DiagnosticAssistantProps> = ({
       setScanCorrelations(response.text());
     } catch (error) {
       console.error('Failed to correlate scan findings:', error);
+      setScanCorrelations('Unable to perform scan correlation analysis. Please try again or contact support if the issue persists.');
     } finally {
       setLoading(false);
     }
@@ -303,12 +368,62 @@ export const DiagnosticAssistant: React.FC<DiagnosticAssistantProps> = ({
               )}
 
               {recentScans && recentScans.length > 0 && (
-                <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="mt-6 space-y-4">
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                      <p className="text-green-800 font-medium">{recentScans.length} scan(s) available for comparative analysis</p>
                     </div>
-                    <p className="text-green-800 font-medium">{recentScans.length} recent scan(s) available for analysis</p>
+                    
+                    {/* Scan Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                      {recentScans.slice(0, 4).map((scan, index) => (
+                        <div key={scan.id} className="bg-white p-3 rounded-lg border border-green-200/50 shadow-sm">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
+                                {scan.scan_type.toUpperCase()}
+                              </span>
+                              <span className={`text-xs px-2 py-1 rounded font-medium ${
+                                scan.urgency_level === 'critical' ? 'bg-red-100 text-red-800' :
+                                scan.urgency_level === 'high' ? 'bg-orange-100 text-orange-800' :
+                                scan.urgency_level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {scan.urgency_level}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {new Date(scan.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700 truncate">{scan.file_name}</p>
+                          {scan.ai_findings && scan.ai_findings.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-xs text-gray-600">
+                                {scan.ai_findings.length} finding(s) identified
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {recentScans.length > 4 && (
+                      <p className="text-sm text-green-700 mt-3 text-center">
+                        ...and {recentScans.length - 4} more scan(s)
+                      </p>
+                    )}
+                    
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-blue-800 text-sm font-medium">💡 AI Correlation Analysis:</p>
+                      <p className="text-blue-700 text-sm mt-1">
+                        The AI will compare findings between your scans, assess progression/improvement, 
+                        and correlate imaging results with clinical symptoms to guide treatment decisions.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

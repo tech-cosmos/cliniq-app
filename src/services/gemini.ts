@@ -6,7 +6,7 @@ class GeminiService {
 
   constructor() {
     this.genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY!);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   }
 
   async analyzeMedicalScan(imageData: string, scanType: string, patientContext?: string): Promise<{
@@ -17,32 +17,61 @@ class GeminiService {
   }> {
     try {
       const prompt = `
-        You are an expert radiologist AI assistant analyzing a ${scanType} scan. 
+        You are an expert radiologist AI assistant analyzing a ${scanType} medical image.
         ${patientContext ? `Patient context: ${patientContext}` : ''}
         
-        Please analyze this medical image and provide:
-        1. A detailed analysis of what you observe
-        2. Key findings (list format)
-        3. Urgency level (low/medium/high/critical)
-        4. Clinical recommendations
+        SYSTEMATIC RADIOLOGICAL ANALYSIS PROTOCOL:
         
-        Format your response as JSON with the following structure:
+        1. IMAGE QUALITY & TECHNIQUE:
+        - Assess image quality, positioning, and exposure
+        - Note any technical limitations
+        
+        2. SYSTEMATIC REVIEW (analyze each structure):
+        ${this.getScanTypeSpecificInstructions(scanType)}
+        
+        3. PATHOLOGICAL FINDINGS:
+        - Identify ALL abnormalities present
+        - Describe location, size, characteristics
+        - Compare bilateral structures when applicable
+        - Look for signs of trauma, infection, degeneration, or malignancy
+        
+        4. CLINICAL CORRELATION:
+        - Assess clinical significance of findings
+        - Consider differential diagnoses
+        - Determine urgency level based on findings
+        
+        URGENCY LEVEL GUIDELINES:
+        - CRITICAL: Fractures, acute hemorrhage, pneumothorax, bowel obstruction, large masses
+        - HIGH: Suspicious lesions, significant joint space narrowing, moderate effusions
+        - MEDIUM: Mild degenerative changes, small nodules requiring follow-up
+        - LOW: Normal study, minimal age-related changes
+        
+        Provide detailed analysis focusing on:
+        - Bone integrity and alignment
+        - Joint spaces and soft tissues
+        - Any signs of fracture, dislocation, or pathology
+        - Comparison with normal anatomy
+        
+        Format your response as JSON:
         {
-          "analysis": "detailed analysis text",
-          "findings": ["finding 1", "finding 2", ...],
+          "analysis": "Comprehensive systematic analysis of findings",
+          "findings": ["Specific finding 1", "Specific finding 2", ...],
           "urgencyLevel": "low|medium|high|critical",
-          "recommendations": ["recommendation 1", "recommendation 2", ...]
+          "recommendations": ["Specific recommendation 1", "Specific recommendation 2", ...]
         }
         
         IMPORTANT: This is for educational/assistive purposes only. Always recommend consulting with a qualified radiologist for final diagnosis.
       `;
 
+      // Determine MIME type based on image data
+      const mimeType = this.determineMimeType(imageData);
+      
       const result = await this.model.generateContent([
         prompt,
         {
           inlineData: {
             data: imageData,
-            mimeType: 'image/jpeg'
+            mimeType: mimeType
           }
         }
       ]);
@@ -160,6 +189,88 @@ class GeminiService {
       console.error('Failed to provide diagnostic suggestions:', error);
       throw error;
     }
+  }
+
+  private getScanTypeSpecificInstructions(scanType: string): string {
+    const instructions = {
+      'xray': `
+        BONE ASSESSMENT:
+        - Examine cortical bone continuity for fractures
+        - Assess trabecular pattern and bone density
+        - Check for cortical thinning, sclerosis, or lucencies
+        - Evaluate joint alignment and spacing
+        
+        SOFT TISSUE EVALUATION:
+        - Assess soft tissue swelling or masses
+        - Check for foreign bodies or calcifications
+        - Evaluate muscle planes and fat pads
+        
+        SPECIFIC FINDINGS TO IDENTIFY:
+        - Fractures (complete, incomplete, comminuted, displaced)
+        - Dislocations or subluxations
+        - Bone lesions (lytic, sclerotic, mixed)
+        - Degenerative changes (joint space narrowing, osteophytes)
+        - Signs of infection (periosteal reaction, soft tissue swelling)`,
+      
+      'ct': `
+        SYSTEMATIC CT ANALYSIS:
+        - Assess bone windows for fractures and bone lesions
+        - Evaluate soft tissue windows for masses, fluid collections
+        - Check vascular structures and enhancement patterns
+        - Look for signs of hemorrhage, ischemia, or inflammation
+        
+        SPECIFIC ATTENTION TO:
+        - Acute traumatic findings
+        - Mass lesions and their characteristics
+        - Fluid collections or abscesses
+        - Vascular abnormalities
+        - Signs of malignancy or metastases`,
+      
+      'mri': `
+        MULTIPLANAR MRI ANALYSIS:
+        - Assess T1, T2, FLAIR sequences systematically
+        - Evaluate signal characteristics of all structures
+        - Look for enhancement patterns if contrast given
+        - Assess for edema, hemorrhage, or mass effect
+        
+        TISSUE CHARACTERIZATION:
+        - Differentiate solid from cystic lesions
+        - Assess for signs of infection or inflammation
+        - Evaluate vascular structures
+        - Look for neural compromise or cord compression`,
+      
+      'ultrasound': `
+        ULTRASOUND EVALUATION:
+        - Assess echogenicity and echotexture
+        - Evaluate for fluid collections or masses
+        - Check for vascular flow if Doppler available
+        - Assess organ morphology and size
+        
+        DYNAMIC ASSESSMENT:
+        - Real-time evaluation of movement
+        - Assessment of compressibility
+        - Evaluation of blood flow patterns`,
+      
+      'other': `
+        GENERAL IMAGING ANALYSIS:
+        - Systematic evaluation of all visible structures
+        - Compare with normal anatomical landmarks
+        - Identify any abnormal findings or asymmetries
+        - Assess for signs of pathology or trauma`
+    };
+
+    return instructions[scanType.toLowerCase() as keyof typeof instructions] || instructions.other;
+  }
+
+  private determineMimeType(imageData: string): string {
+    // Check for common image format signatures in base64
+    if (imageData.startsWith('/9j/')) return 'image/jpeg';
+    if (imageData.startsWith('iVBORw0KGgo')) return 'image/png';
+    if (imageData.startsWith('R0lGOD')) return 'image/gif';
+    if (imageData.startsWith('UklGR')) return 'image/webp';
+    
+    // Default to JPEG if unable to determine
+    return 'image/jpeg';
   }
 }
 

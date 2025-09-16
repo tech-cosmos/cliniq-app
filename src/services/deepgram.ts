@@ -15,7 +15,7 @@ class DeepgramService {
     return new Promise((resolve, reject) => {
       try {
         this.connection = this.deepgram.listen.live({
-          model: 'nova-2',
+          model: 'nova-3',
           language: 'en-US',
           smart_format: true,
           filler_words: false,
