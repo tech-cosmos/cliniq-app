@@ -400,14 +400,13 @@ SOFTWARE.
 ## 📞 Support & Contact
 
 ### Community
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/progonomix/discussions)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/progonomix/issues)
-- 📧 **Email**: support@progonomix.com
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/tech-cosmos/progonomix/discussions)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/tech-cosmos/progonomix/issues)
 
 ### Professional Support
 For enterprise deployments, custom integrations, or professional support:
-- 🏢 **Enterprise**: enterprise@progonomix.com
-- 💼 **Partnerships**: partnerships@progonomix.com
+- 🏢 **Enterprise**: natasha.sebastian19@gmail.com
+- 💼 **Partnerships**: natasha.sebastian19@gmail.com
 
 ---
 
