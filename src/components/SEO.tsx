@@ -73,14 +73,14 @@ export const SEO: React.FC<SEOProps> = ({
     
     // Add structured data
     if (structuredData) {
-      let script = document.querySelector('script[type="application/ld+json"]');
+      let script = document.querySelector('script[type="application/ld+json"]') as HTMLScriptElement;
       if (script) {
         script.textContent = JSON.stringify(structuredData);
       } else {
-        script = document.createElement('script');
-        script.type = 'application/ld+json';
-        script.textContent = JSON.stringify(structuredData);
-        document.head.appendChild(script);
+        const newScript = document.createElement('script') as HTMLScriptElement;
+        newScript.type = 'application/ld+json';
+        newScript.textContent = JSON.stringify(structuredData);
+        document.head.appendChild(newScript);
       }
     }
   }, [fullTitle, description, keywords, fullImageUrl, url, type, noIndex, structuredData]);

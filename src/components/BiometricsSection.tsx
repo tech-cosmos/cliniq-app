@@ -4,7 +4,7 @@ import { BiometricsChart } from './BiometricsChart';
 import { PhysicianReport } from './PhysicianReport';
 import BiometricsService from '../services/biometrics';
 import BiometricsAnalysisService from '../services/biometricsAnalysis';
-import { TrendingUp, Activity, Brain, Heart, Download, FileText, Loader, BarChart3, Plus, AlertTriangle, CheckCircle } from 'lucide-react';
+import { TrendingUp, Activity, Brain, Heart, Download, FileText, Loader, BarChart3, Plus, AlertTriangle } from 'lucide-react';
 
 interface BiometricsSectionProps {
   patientId: string;
@@ -20,7 +20,7 @@ export const BiometricsSection: React.FC<BiometricsSectionProps> = ({ patientId 
 
   useEffect(() => {
     loadBiometrics();
-  }, [patientId]);
+  }, [patientId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadBiometrics = async () => {
     try {

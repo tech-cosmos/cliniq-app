@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Patient, SOAPNote, MedicalScan } from '../types/database';
 import GeminiService from '../services/gemini';
-import { Brain, Lightbulb, AlertTriangle, BookOpen, Search, Stethoscope } from 'lucide-react';
+import { Brain, Lightbulb, AlertTriangle, BookOpen, Search } from 'lucide-react';
 
 interface DiagnosticAssistantProps {
   patient: Patient;
